@@ -7,282 +7,394 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#e9eef0;--ink:#12202a;--mute:#51636e;--line:#c3cfd5;--card:#f6f9fa;--accent:#2a8f6a;--sky:#dfe9ec}
-body[data-b="1"]{--accent:#c79a12;--sky:#efe9d2}
-body[data-b="2"]{--accent:#d9701a;--sky:#f0dfcb}
-body[data-b="3"]{--accent:#c23a2b;--sky:#ecd2cc}
-body[data-b="4"]{--accent:#7a2f8f;--sky:#e0cfe6}
-body[data-b="5"]{--accent:#4a1220;--sky:#d6c4c4}
+:root{
+  --bg:#f3f5f7;--card:#fff;--ink:#16202a;--mute:#5b6672;--line:#dde2e7;
+  --b0:#2e9e4f;--b0t:#fff;   /* Good */
+  --b1:#2f7fd6;--b1t:#fff;   /* Moderate */
+  --b2:#f2c200;--b2t:#1a1a1a;/* Unhealthy */
+  --b3:#f07d1a;--b3t:#1a1a1a;/* Very unhealthy */
+  --b4:#d6322b;--b4t:#fff;   /* Hazardous */
+  --b5:#8e1b1b;--b5t:#fff;   /* >400 */
+}
 *{box-sizing:border-box}
-html{height:100%}
-body{margin:0;font:16px/1.55 "Instrument Sans",system-ui,sans-serif;color:var(--ink);background:linear-gradient(var(--sky),var(--bg) 480px) var(--bg);min-height:100%;transition:background .6s}
-main{max-width:880px;margin:0 auto;padding:32px 20px 64px}
-h1{font-size:1rem;font-weight:600;margin:0 0 4px;color:var(--mute)}
-.hero{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 28px;padding:12px 0 24px;border-bottom:2px solid var(--accent)}
-.big{font-size:clamp(5rem,22vw,10rem);font-weight:700;line-height:.9;letter-spacing:-.04em;color:var(--accent)}
-.band{font-size:1.6rem;font-weight:700}
-.sub{color:var(--mute);margin:0}
-section{margin-top:36px}
-h2{font-size:1.15rem;margin:0 0 4px}
-.note{color:var(--mute);font-size:.9rem;margin:0 0 14px;max-width:62ch}
-table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line)}
-th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
-th:first-child,td:first-child{text-align:left}
-th{font-weight:600;font-size:.85rem;color:var(--mute)}
-.chip{display:inline-block;min-width:3ch;padding:1px 8px;border-radius:99px;color:#fff;font-weight:600;text-align:center}
-.cig{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0;border:1px solid var(--line);background:var(--card)}
-.cig div{padding:16px 18px;border-right:1px solid var(--line)}
-.cig b{display:block;font-size:2.4rem;line-height:1.1;letter-spacing:-.02em}
-.cig span{color:var(--mute);font-size:.9rem}
-ul{padding-left:1.1em;margin:6px 0}
-li{margin:4px 0}
-.recs{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:24px}
-.recs h3{font-size:1rem;margin:0}
-footer{margin-top:44px;color:var(--mute);font-size:.82rem}
-#err{display:none;background:#f4d6d1;border:1px solid #c23a2b;padding:12px;margin-top:20px}
-a{color:inherit}
-.seg{display:inline-flex;border:1px solid var(--line);background:var(--card);margin:0 0 12px}
-.seg button{font:inherit;font-weight:600;padding:8px 16px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
+body{margin:0;font:16px/1.55 "Instrument Sans",system-ui,sans-serif;color:var(--ink);background:var(--bg)}
+main{max-width:920px;margin:0 auto;padding:28px 16px 64px}
+header h1{font-size:1.5rem;margin:0}
+header p{margin:2px 0 0;color:var(--mute);font-size:.92rem}
+section,.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-top:18px}
+h2{font-size:1.1rem;margin:0 0 4px}
+.note{color:var(--mute);font-size:.9rem;margin:0 0 14px;max-width:70ch}
+#banner{display:none;margin-top:14px;padding:10px 14px;border-radius:8px;background:#e8eef5;border:1px solid #c5d3e3;color:#27394d;font-size:.92rem}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1fr 230px;gap:20px;align-items:center}
+@media(max-width:620px){.hero{grid-template-columns:1fr}}
+.big{font-size:clamp(4.5rem,18vw,7.5rem);font-weight:700;line-height:1;letter-spacing:-.04em}
+.pill{display:inline-block;padding:3px 14px;border-radius:99px;font-weight:700;font-size:1.05rem;vertical-align:middle;margin-left:10px}
+.sub{color:var(--mute);margin:6px 0 0;font-size:.92rem}
+.avatar{text-align:center;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fafbfc}
+.avatar svg{width:100%;height:auto;max-height:150px;stroke:var(--ink);fill:none;stroke-width:3.5;stroke-linecap:round;stroke-linejoin:round}
+.avatar svg text{fill:var(--ink);stroke:none;font-family:inherit}
+.avatar b{display:block;margin-top:4px}
+.avatar span{display:block;color:var(--mute);font-size:.82rem}
+
+/* controls */
+.controls{display:flex;flex-wrap:wrap;gap:8px 18px;margin:0 0 14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#fff}
+.seg button{font:inherit;font-weight:600;font-size:.9rem;padding:7px 14px;border:0;border-right:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .seg button:last-child{border-right:0}
 .seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
-.seg button:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
-.chartbox{position:relative;background:var(--card);border:1px solid var(--line);padding:8px}
-.chartbox svg{display:block;width:100%;height:auto;touch-action:pan-y}
-#tip{position:absolute;pointer-events:none;display:none;background:var(--ink);color:#fff;font-size:.82rem;padding:8px 10px;line-height:1.4;white-space:nowrap;z-index:2}
+.seg button:focus-visible{outline:3px solid var(--b1);outline-offset:-3px}
+.ctl-label{display:block;font-size:.78rem;color:var(--mute);margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
+
+/* table */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:480px}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;font-size:.82rem;color:var(--mute)}
+tr:last-child td{border-bottom:0}
+.chip{display:inline-block;min-width:3.2ch;padding:2px 10px;border-radius:99px;font-weight:700;text-align:center}
+.c0{background:var(--b0);color:var(--b0t)}.c1{background:var(--b1);color:var(--b1t)}.c2{background:var(--b2);color:var(--b2t)}
+.c3{background:var(--b3);color:var(--b3t)}.c4{background:var(--b4);color:var(--b4t)}.c5{background:var(--b5);color:var(--b5t)}
+
+/* chart */
+.chartbox{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.plot{position:relative;padding:8px}
+.plot svg{display:block;width:100%;height:auto;touch-action:pan-y}
+#tip{position:absolute;pointer-events:none;display:none;background:var(--ink);color:#fff;font-size:.82rem;padding:8px 10px;line-height:1.45;white-space:nowrap;z-index:2;border-radius:6px}
 #tip i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:2px}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px;font-size:.88rem;color:var(--mute)}
-.legend i{display:inline-block;width:18px;height:4px;margin-right:6px;vertical-align:middle}
-.bandkey{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--mute);margin-top:6px}
-.bandkey i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-2px;opacity:.7}
+.keys{border-top:1px solid var(--line);background:#fafbfc;padding:10px 14px;display:grid;gap:8px}
+.keyrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;font-size:.86rem}
+.keyrow strong{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);min-width:56px}
+.keyrow span{display:inline-flex;align-items:center;gap:6px}
+.sw-line{width:20px;height:4px;border-radius:2px;display:inline-block}
+.sw-box{width:13px;height:13px;border-radius:3px;display:inline-block}
+
+/* cigs + recs */
+.cig{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.cig div{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.cig b{display:block;font-size:2.2rem;line-height:1.1;letter-spacing:-.02em}
+.cig span{color:var(--mute);font-size:.88rem}
+.now{border-radius:10px;padding:12px 16px;margin-bottom:14px;font-weight:600}
+.recs{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.recs>div{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.recs h3{font-size:.95rem;margin:0 0 4px}
+.recs p{margin:0;font-size:.95rem}
+.tips{margin:14px 0 0;padding-left:1.1em}.tips li{margin:4px 0}
+footer{margin-top:24px;color:var(--mute);font-size:.82rem}
+
+/* loading skeleton */
+@keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.sk{color:transparent!important;border-radius:6px;background:linear-gradient(90deg,#e6eaee 25%,#f3f5f7 50%,#e6eaee 75%);background-size:200% 100%;animation:sh 1.4s linear infinite}
+.sk *{visibility:hidden}
 </style>
 </head>
-<body data-b="0">
+<body>
 <main>
-  <h1>Singapore haze check · <span id="upd">loading…</span></h1>
-  <div class="hero">
-    <div class="big" id="psi3">–</div>
+  <header>
+    <h1>Singapore haze check</h1>
+    <p id="upd">Loading latest readings…</p>
+  </header>
+  <div id="banner" role="status"></div>
+
+  <div class="card hero">
     <div>
-      <div class="band" id="band">Fetching latest readings</div>
-      <p class="sub">Old-style 3-hour PSI, worst region</p>
-      <p class="sub" id="pmNow"></p>
+      <div class="controls" style="margin-bottom:10px">
+        <div><span class="ctl-label">PSI based on</span>
+        <div class="seg" id="heroSeg" role="group" aria-label="PSI type">
+          <button data-h="1" aria-pressed="false">1-hour</button>
+          <button data-h="3" aria-pressed="true">3-hour</button>
+          <button data-h="24" aria-pressed="false">24-hour</button>
+        </div></div>
+      </div>
+      <div><span class="big sk" id="psiBig">00</span><span class="pill sk" id="psiPill">Loading</span></div>
+      <p class="sub sk" id="heroSub">Worst region right now</p>
     </div>
+    <div class="avatar"><svg id="art" viewBox="0 0 200 140" aria-hidden="true"></svg><b class="sk" id="artCap">Loading</b><span id="artSub"></span></div>
   </div>
-  <div id="err"></div>
 
   <section>
     <h2>By region</h2>
-    <p class="note">Current PM2.5 is the latest 1-hour reading. 3-hour PSI uses the average of the last three hourly readings. 24-hour PSI is NEA's official figure.</p>
-    <table>
-      <thead><tr><th>Region</th><th>PM2.5 now (µg/m³)</th><th>3h PSI</th><th>24h PSI</th></tr></thead>
+    <p class="note">PM2.5 is the latest 1-hour reading (µg/m³). Colours show the PSI band each number falls in. 1-hour and 3-hour PSI are calculated here from PM2.5; 24-hour PSI is NEA's official figure.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Region</th><th>PM2.5 now</th><th>1h PSI</th><th>3h PSI</th><th>24h PSI</th></tr></thead>
       <tbody id="rows"></tbody>
-    </table>
+    </table></div>
   </section>
 
   <section>
     <h2>Past 24 hours</h2>
-    <p class="note">PM2.5 in µg/m³ for each region. The 3-hour and 24-hour views are rolling averages ending at each hour. Shaded bands show the PSI band each PM2.5 level falls in.</p>
-    <div class="seg" role="group" aria-label="Averaging period">
-      <button data-m="1" aria-pressed="true">1-hour</button>
-      <button data-m="3" aria-pressed="false">3-hour avg</button>
-      <button data-m="24" aria-pressed="false">24-hour avg</button>
+    <p class="note">Rolling averages ending at each hour. The PSI view converts PM2.5 with NEA's breakpoints, so its 24-hour line can differ slightly from the official PSI (which also includes other pollutants).</p>
+    <div class="controls">
+      <div><span class="ctl-label">Scale</span>
+        <div class="seg" id="unitSeg" role="group" aria-label="Scale">
+          <button data-u="pm" aria-pressed="true">PM2.5</button>
+          <button data-u="psi" aria-pressed="false">PSI</button>
+        </div></div>
+      <div><span class="ctl-label">Average</span>
+        <div class="seg" id="avgSeg" role="group" aria-label="Averaging period">
+          <button data-m="1" aria-pressed="true">1-hour</button>
+          <button data-m="3" aria-pressed="false">3-hour</button>
+          <button data-m="24" aria-pressed="false">24-hour</button>
+        </div></div>
     </div>
-    <div class="chartbox"><svg id="chart" role="img" aria-label="PM2.5 by region over the past 24 hours"></svg><div id="tip"></div></div>
-    <div class="legend" id="legend"></div>
-    <div class="bandkey" id="bandkey"></div>
+    <div class="chartbox">
+      <div class="plot sk" id="plot" style="min-height:260px"><svg id="chart" role="img" aria-label="Haze readings by region over the past 24 hours"></svg><div id="tip"></div></div>
+      <div class="keys">
+        <div class="keyrow"><strong>Regions</strong><span id="regKey"></span></div>
+        <div class="keyrow"><strong>Bands</strong><span id="bandKey"></span></div>
+      </div>
+    </div>
   </section>
 
   <section>
     <h2>Cigarette equivalent</h2>
-    <p class="note">Rough rule of thumb from Berkeley Earth: breathing 22 µg/m³ of PM2.5 over 24 hours is about one cigarette. It is an illustration of exposure, not a medical measurement.</p>
+    <p class="note">Rule of thumb from Berkeley Earth: breathing 22 µg/m³ of PM2.5 over 24 hours is roughly one cigarette. An illustration of exposure, not a medical measurement.</p>
     <div class="cig">
-      <div><b id="c24">–</b><span>cigarettes over the past 24 hours (island-wide average)</span></div>
-      <div><b id="c1h">–</b><span>cigarettes in the last hour</span></div>
-      <div><b id="cpace">–</b><span>cigarettes per day if this hour's level continued</span></div>
+      <div><b class="sk" id="c24">0.0</b><span>cigarettes over the past 24 hours (island-wide average)</span></div>
+      <div><b class="sk" id="c1h">0.00</b><span>cigarettes in the last hour</span></div>
+      <div><b class="sk" id="cpace">0.0</b><span>cigarettes per day if this hour's level continued</span></div>
     </div>
   </section>
 
   <section>
     <h2>What to do</h2>
-    <p class="note" id="recIntro"></p>
+    <p class="note" id="recIntro">&nbsp;</p>
+    <div id="nowBox"></div>
     <div class="recs" id="recs"></div>
+    <ul class="tips" id="tips"></ul>
   </section>
 
-  <footer>Data: NEA via data.gov.sg (PM2.5 hourly, 24-hour PSI). The 3-hour PSI is calculated here with the pre-2014 NEA PM2.5 breakpoints and is not an official figure. For official advisories see haze.gov.sg. Not medical advice; if you have heart or lung conditions, follow your doctor's guidance.</footer>
+  <footer>Data: NEA via data.gov.sg. Health advice follows NEA's 24-hour PSI advisory for planning ahead and the 1-hour PM2.5 for immediate activities; the 1-hour wording here is simplified, so check <a href="https://www.haze.gov.sg">haze.gov.sg</a> for official advisories. The 1-hour and 3-hour PSI figures are not official. Not medical advice; if you have a heart or lung condition, follow your doctor's guidance.</footer>
 </main>
 
 <script>
 const REGIONS = ['north','west','central','east','south'];
 const BANDS = [
-  {max:50,  name:'Good',           color:'#2a8f6a', i:0},
-  {max:100, name:'Moderate',       color:'#c79a12', i:1},
-  {max:200, name:'Unhealthy',      color:'#d9701a', i:2},
-  {max:300, name:'Very unhealthy', color:'#c23a2b', i:3},
-  {max:400, name:'Hazardous',      color:'#7a2f8f', i:4},
-  {max:Infinity, name:'Hazardous',  color:'#4a1220', i:5},
-];
-const band = p => BANDS.find(b => p <= b.max);
+  {max:50,  name:'Good'},{max:100, name:'Moderate'},{max:200, name:'Unhealthy'},
+  {max:300, name:'Very unhealthy'},{max:400, name:'Hazardous'},{max:Infinity, name:'Hazardous'},
+].map((b,i)=>({...b,i}));
+const bandOf = p => BANDS.find(b => p <= b.max);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const bandColor = i => css('--b'+i);
 
 // NEA PM2.5 breakpoints: [concLow, concHigh, psiLow, psiHigh]
 const BP = [[0,12,0,50],[12,55,50,100],[55,150,100,200],[150,250,200,300],[250,350,300,400],[350,500,400,500]];
 function psiFromPm(c){
   if (c >= 500) return 500;
-  const [cl,ch,pl,ph] = BP.find(b => c <= b[1]) || BP[5];
+  const [cl,ch,pl,ph] = BP.find(b => c <= b[1]);
   return Math.round(pl + (c - cl) * (ph - pl) / (ch - cl));
 }
 const mean = a => a.reduce((s,x)=>s+x,0) / a.length;
-const chip = v => `<span class="chip" style="background:${band(v).color}">${v}</span>`;
 const fmt = (n,d=1) => n.toFixed(d);
-// colour a PM2.5 value by the PSI band it maps to (0-12 Good, 13-55 Moderate, 56-150 Unhealthy, 151-250 Very unhealthy, 251+ Hazardous)
-const pmChip = v => `<span class="chip" style="background:${band(psiFromPm(v)).color}">${v}</span>`;
+const psiChip = v => v == null ? '–' : `<span class="chip c${bandOf(v).i}">${v}</span>`;
+const pmChip = v => `<span class="chip c${bandOf(psiFromPm(v)).i}">${v}</span>`;
+const $ = id => document.getElementById(id);
 
-function recommendations(psi24, pmNow){
-  // Activity advice follows NEA's 1-hour PM2.5 bands, health advice its 24h PSI bands.
-  const act = pmNow <= 55 ? 0 : pmNow <= 150 ? 1 : pmNow <= 250 ? 2 : 3;
-  const h = band(psi24).i;
-  const general = [
-    ['Carry on as normal outdoors.'],
-    ['Normal activities are fine for most people.', 'Very sensitive people may want to cut back on prolonged heavy exertion outdoors.'],
-    ['Reduce prolonged or strenuous outdoor activity (running, cycling, outdoor sports).', 'Move workouts indoors or to a less hazy hour.'],
-    ['Minimise outdoor activity and avoid strenuous exertion outdoors.', 'Keep school and work outdoor activities to a minimum.'],
-  ][act];
-  const sensitive = [
-    ['Keep medication handy if you have asthma or heart disease, as usual.'],
-    ['Elderly, pregnant women, children and people with heart or lung disease: limit long outdoor stints.'],
-    ['Elderly, pregnant women, children and people with heart, lung or chronic illness: stay indoors as much as possible.', 'Keep prescribed medication close and see a doctor if symptoms flare up.'],
-    ['Vulnerable groups should stay indoors with windows closed.', 'Seek medical care early for breathing difficulty, chest pain or dizziness.'],
-  ][Math.min(h,3)];
-  const tips = [
-    'Close windows when haze is elevated; run air-conditioning on recirculate or an air purifier with a HEPA filter.',
+// ---------- artwork ----------
+const ART = {
+0: `<circle cx="108" cy="34" r="10"/><path d="M104 46L94 82M102 54L120 64L130 52M102 54L86 62L76 74M94 82L114 94L112 122M94 82L78 98L56 94M20 50H48M12 66H40M24 82H44M10 128H190"/><circle cx="168" cy="28" r="9"/><path d="M168 12v-5M168 44v5M152 28h-5M184 28h5M157 17l-4-4M179 39l4 4M179 17l4-4M157 39l-4 4"/>`,
+1: `<circle cx="62" cy="44" r="10"/><path d="M62 56V92L88 96V126M62 64L84 80L102 82M46 98H70M48 98V126M96 92H176M172 92V126M100 90H140M104 90L110 64H140L142 90M10 128H190"/><rect x="152" y="78" width="10" height="12" rx="2"/><path d="M155 74q-3-4 0-8M162 82q5 0 5 4t-5 4"/><text x="100" y="30" font-size="10">per my last email</text>`,
+2: `<path d="M28 70L100 22L172 70M40 62V128H160V62M54 100V88H112V100M84 87V100M10 128H190"/><circle cx="84" cy="78" r="8"/><rect x="54" y="100" width="64" height="22" rx="4"/><rect x="130" y="92" width="24" height="16" rx="2"/><path d="M142 108V118M134 118H150"/><text x="94" y="66" font-size="10">zzz</text>`,
+3: `<circle cx="100" cy="44" r="16"/><rect x="88" y="47" width="24" height="13" rx="3" fill="currentColor" style="fill:var(--line)"/><path d="M88 51L82 47M112 51L118 47M100 60V100M100 70L78 88M100 70L122 88M100 100L88 126M100 100L112 126M10 128H190"/><circle cx="94" cy="41" r="1.6" style="fill:var(--ink)"/><circle cx="106" cy="41" r="1.6" style="fill:var(--ink)"/><ellipse cx="36" cy="36" rx="26" ry="9" style="fill:#9aa3ab;opacity:.45;stroke:none"/><ellipse cx="168" cy="62" rx="24" ry="8" style="fill:#9aa3ab;opacity:.45;stroke:none"/><ellipse cx="40" cy="92" rx="22" ry="8" style="fill:#9aa3ab;opacity:.45;stroke:none"/>`,
+4: `<circle cx="44" cy="112" r="11"/><path d="M38 107l4 4m0-4l-4 4M46 107l4 4m0-4l-4 4M55 114H118M72 114L80 100M88 114L98 124M118 114L146 106M118 114L146 124M10 128H190"/><ellipse cx="44" cy="88" rx="11" ry="3.5"/><path d="M160 128V92a15 15 0 0 1 30 0V128Z"/><text x="175" y="110" font-size="11" text-anchor="middle">RIP</text>`,
+};
+const CAPS = [
+  ['Go for that run','The air is clean. Park connector awaits.'],
+  ['Business as usual','Back to work. Haze is not a valid MC reason.'],
+  ['Stay in. Netflix time','Keep the strenuous stuff indoors.'],
+  ['Mask up','N95 if you really must go out.'],
+  ['Absolutely not','(Dramatised. Please just stay indoors.)'],
+];
+function setArt(i){
+  const k = Math.min(i,4);
+  $('art').innerHTML = ART[k];
+  $('artCap').textContent = CAPS[k][0]; $('artSub').textContent = CAPS[k][1];
+}
+
+// ---------- state ----------
+let DATA = null, R = null, HERO = 3, METRIC = 1, UNIT = 'pm';
+
+function compute(d){
+  const out = {};
+  REGIONS.forEach(r => {
+    const a = d.hourly.map(x => x.v[r]).filter(v => v != null);
+    const now = a.at(-1), p3 = mean(a.slice(-3)), pm24 = d.pm25_24h?.[r];
+    out[r] = {now, p3, pm24, psi1: psiFromPm(now), psi3: psiFromPm(p3),
+              psi24: d.psi24?.[r] ?? (pm24 != null ? psiFromPm(pm24) : null)};
+  });
+  return out;
+}
+const worst = key => Math.max(...REGIONS.map(r => R[r][key] ?? 0));
+
+function renderHero(){
+  const v = worst({1:'psi1',3:'psi3',24:'psi24'}[HERO]);
+  const b = bandOf(v);
+  ['psiBig','psiPill','heroSub','artCap'].forEach(id => $(id).classList.remove('sk'));
+  $('psiBig').textContent = v;
+  $('psiPill').textContent = b.name; $('psiPill').className = `pill c${b.i}`;
+  $('heroSub').textContent = {1:'1-hour PSI, worst region (latest hourly PM2.5 converted)',
+    3:'Old-style 3-hour PSI, worst region (average of last 3 hourly PM2.5 readings)',
+    24:'Official 24-hour PSI, worst region'}[HERO];
+  setArt(b.i);
+}
+
+function renderTable(){
+  $('rows').innerHTML = REGIONS.map(r => {
+    const x = R[r];
+    return `<tr><td style="text-transform:capitalize">${r}</td><td>${pmChip(x.now)}</td><td>${psiChip(x.psi1)}</td><td>${psiChip(x.psi3)}</td><td>${psiChip(x.psi24)}</td></tr>`;
+  }).join('');
+}
+
+function renderCigs(){
+  const natNow = mean(REGIONS.map(r => R[r].now));
+  const pm24 = mean(REGIONS.map(r => R[r].pm24).filter(v => v != null));
+  [['c24', fmt(pm24/22)],['cpace', fmt(natNow/22)],['c1h', fmt(natNow/22/24,2)]].forEach(([id,t]) => { $(id).textContent = t; $(id).classList.remove('sk'); });
+}
+
+// ---------- recommendations ----------
+const ADV = {
+  healthy:   ['Normal activities.','Normal activities.','Reduce prolonged or strenuous outdoor physical exertion.','Avoid prolonged or strenuous outdoor physical exertion.','Minimise outdoor activity.'],
+  sensitive: ['Normal activities.','Normal activities.','Minimise prolonged or strenuous outdoor physical exertion.','Avoid prolonged or strenuous outdoor physical exertion.','Avoid outdoor activity.'],
+  chronic:   ['Normal activities.','Normal activities.','Avoid prolonged or strenuous outdoor physical exertion.','Minimise outdoor activity.','Avoid outdoor activity.'],
+};
+function pmBand(v){
+  if (v <= 55)  return {n:'Band I (Normal)', c:0, t:'Fine for immediate outdoor activity.'};
+  if (v <= 150) return {n:'Band II (Elevated)', c:2, t:'Haze is building. Keep outdoor activity lighter and shorter, especially if you are in a sensitive group.'};
+  if (v <= 250) return {n:'Band III (High)', c:3, t:'Move strenuous activity indoors and keep time outside short.'};
+  return {n:'Band IV (Very high)', c:4, t:'Stay indoors where you can.'};
+}
+function renderRecs(){
+  const psi24 = worst('psi24'), k = Math.min(bandOf(psi24).i, 4);
+  const pmMax = Math.max(...REGIONS.map(r => R[r].now));
+  const pb = pmBand(pmMax);
+  $('recIntro').textContent = `Following NEA: use the 1-hour PM2.5 for what you do right now, and the 24-hour PSI (currently ${psi24}, ${bandOf(psi24).name}) to plan ahead.`;
+  $('nowBox').innerHTML = `<div class="now c${pb.c}">Right now: ${pb.n}, highest region ${pmMax} µg/m³. ${pb.t}</div>`;
+  $('recs').innerHTML = [['Healthy adults','healthy'],['Elderly, pregnant women, children','sensitive'],['Chronic lung or heart disease','chronic']]
+    .map(([t,key]) => `<div><h3>${t}</h3><p>${ADV[key][k]}</p></div>`).join('');
+  const tips = ['Check haze.gov.sg or the myENV app before planning outdoor activity.'];
+  if (k >= 2 || pmMax > 55) tips.unshift(
     'If you must be outside for long, wear a well-fitted N95 (or equivalent). Surgical masks do not filter fine particles.',
-    'Drink water, rinse eyes if irritated, and avoid smoking or burning incense indoors.',
-    'Check haze.gov.sg and the 1-hour PM2.5 each morning before planning outdoor activity.',
-  ];
-  return {general, sensitive, tips, act, h};
+    'Keep windows closed; use air-con on recirculate or an air purifier with a HEPA filter.',
+    'Skip smoking and burning incense indoors, and see a doctor if you get breathing difficulty or chest pain.');
+  $('tips').innerHTML = tips.map(t => `<li>${t}</li>`).join('');
 }
 
 // ---------- chart ----------
-let HOURLY = [], METRIC = 1;
-const RCOL = {north:'#1f4e79', west:'#b5179e', central:'#111111', east:'#0a8f94', south:'#b86a00'};
+const RCOL = {north:'#6a3d9a', west:'#d6336c', central:'#16202a', east:'#8c564b', south:'#0e9aa7'};
 const W = 600, H = 320, M = {l:46, r:14, t:14, b:30};
 const rolling = (a,n) => a.map((_,i) => mean(a.slice(Math.max(0,i-n+1), i+1)));
-function seriesFor(n){
+function seriesFor(n, unit){
   const out = {};
   REGIONS.forEach(r => {
     let last = null;
-    const vals = HOURLY.map(x => { const v = x.v[r]; if (v != null) last = v; return last; }).filter(v => v != null);
-    out[r] = rolling(vals, n).slice(-24);
+    const vals = DATA.hourly.map(x => { const v = x.v[r]; if (v != null) last = v; return last; }).filter(v => v != null);
+    out[r] = rolling(vals, n).slice(-24).map(v => unit === 'psi' ? psiFromPm(v) : v);
   });
   return out;
 }
 function drawChart(){
-  const svg = document.getElementById('chart');
-  if (!HOURLY.length) return;
-  const S = seriesFor(METRIC);
-  const times = HOURLY.slice(-24).map(x => new Date(x.t));
+  if (!DATA) return;
+  $('plot').classList.remove('sk');
+  const svg = $('chart');
+  const S = seriesFor(METRIC, UNIT);
+  const times = DATA.hourly.slice(-24).map(x => new Date(x.t));
   const N = times.length;
-  const all = REGIONS.flatMap(r => S[r].slice(-N));
-  const yMax = Math.max(60, Math.ceil(Math.max(...all) * 1.15 / 10) * 10);
+  const all = REGIONS.flatMap(r => S[r]);
+  const yMax = UNIT === 'psi' ? Math.max(110, Math.ceil(Math.max(...all) * 1.12 / 10) * 10) : Math.max(60, Math.ceil(Math.max(...all) * 1.15 / 10) * 10);
   const X = i => M.l + (N <= 1 ? 0 : i * (W - M.l - M.r) / (N - 1));
   const Y = v => H - M.b - v * (H - M.t - M.b) / yMax;
+  const th = UNIT === 'psi' ? [0,50,100,200,300,400,1e9] : [0,12,55,150,250,350,1e9];
   let g = '';
-  // band shading (PM2.5 thresholds)
-  [[0,12,0],[12,55,1],[55,150,2],[150,250,3],[250,350,4],[350,1e9,5]].forEach(([lo,hi,i]) => {
-    if (lo >= yMax) return;
-    const top = Y(Math.min(hi,yMax)), bot = Y(lo);
-    g += `<rect x="${M.l}" y="${top}" width="${W-M.l-M.r}" height="${bot-top}" fill="${BANDS[i].color}" opacity=".14"/>`;
-  });
-  // y grid
-  const step = yMax <= 80 ? 10 : yMax <= 160 ? 20 : 50;
-  for (let v = 0; v <= yMax; v += step){
-    g += `<line x1="${M.l}" x2="${W-M.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#12202a" opacity=".12"/><text x="${M.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#51636e">${v}</text>`;
+  for (let i = 0; i < 6; i++){
+    if (th[i] >= yMax) break;
+    const top = Y(Math.min(th[i+1], yMax)), bot = Y(th[i]);
+    g += `<rect x="${M.l}" y="${top}" width="${W-M.l-M.r}" height="${bot-top}" fill="${bandColor(i)}" opacity=".2"/>`;
   }
-  // x labels every 4h
+  const step = [5,10,20,25,50,100].find(s => yMax / s <= 6);
+  for (let v = 0; v <= yMax; v += step)
+    g += `<line x1="${M.l}" x2="${W-M.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#16202a" opacity=".1"/><text x="${M.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#5b6672">${v}</text>`;
+  g += `<text x="12" y="${M.t+4}" font-size="10" fill="#5b6672">${UNIT === 'psi' ? 'PSI' : 'µg/m³'}</text>`;
   times.forEach((t,i) => {
-    if ((N-1-i) % 4 === 0){
-      const lab = t.toLocaleTimeString('en-SG',{hour:'numeric',timeZone:'Asia/Singapore',hour12:true}).replace(' ','').toLowerCase();
-      g += `<text x="${X(i)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#51636e">${lab}</text>`;
-    }
+    if ((N-1-i) % 4 === 0)
+      g += `<text x="${X(i)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#5b6672">${t.toLocaleTimeString('en-SG',{hour:'numeric',timeZone:'Asia/Singapore',hour12:true}).replace(' ','').toLowerCase()}</text>`;
   });
-  // lines
   REGIONS.forEach(r => {
-    const pts = S[r].slice(-N).map((v,i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
-    g += `<polyline points="${pts}" fill="none" stroke="${RCOL[r]}" stroke-width="2.25" stroke-linejoin="round"/>`;
+    g += `<polyline points="${S[r].map((v,i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ')}" fill="none" stroke="${RCOL[r]}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
   });
-  g += `<line id="cur" y1="${M.t}" y2="${H-M.b}" stroke="#12202a" opacity="0" />`;
-  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
-  svg.innerHTML = g;
-  const el = svg;
-  const tip = document.getElementById('tip'), cur = el.querySelector('#cur');
-  const label = {1:'1-hour',3:'3-hour avg',24:'24-hour avg'}[METRIC];
-  const move = e => {
-    const rect = el.getBoundingClientRect();
+  g += `<line id="cur" y1="${M.t}" y2="${H-M.b}" stroke="#16202a" opacity="0"/>`;
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = g;
+  const tip = $('tip'), cur = svg.querySelector('#cur');
+  const label = `${{1:'1-hour',3:'3-hour avg',24:'24-hour avg'}[METRIC]}, ${UNIT === 'psi' ? 'PSI' : 'PM2.5'}`;
+  svg.onpointermove = e => {
+    const rect = svg.getBoundingClientRect();
     const px = (e.clientX - rect.left) * W / rect.width;
     const i = Math.max(0, Math.min(N-1, Math.round((px - M.l) / ((W - M.l - M.r) / (N-1)))));
-    cur.setAttribute('x1', X(i)); cur.setAttribute('x2', X(i)); cur.setAttribute('opacity', .45);
+    cur.setAttribute('x1', X(i)); cur.setAttribute('x2', X(i)); cur.setAttribute('opacity', .4);
     tip.innerHTML = `<b>${times[i].toLocaleTimeString('en-SG',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Singapore'})}</b> (${label})<br>` +
-      REGIONS.map(r => `<i style="background:${RCOL[r]}"></i>${r[0].toUpperCase()+r.slice(1)}: ${fmt(S[r].slice(-N)[i])}`).join('<br>');
+      REGIONS.map(r => `<i style="background:${RCOL[r]}"></i>${r[0].toUpperCase()+r.slice(1)}: ${UNIT === 'psi' ? S[r][i] : fmt(S[r][i])}`).join('<br>');
     tip.style.display = 'block';
-    const bx = el.parentElement.getBoundingClientRect();
+    const bx = svg.parentElement.getBoundingClientRect();
     let left = e.clientX - bx.left + 14;
     if (left + tip.offsetWidth > bx.width) left = e.clientX - bx.left - tip.offsetWidth - 14;
     tip.style.left = left + 'px'; tip.style.top = Math.max(4, e.clientY - bx.top - 20) + 'px';
   };
-  el.onpointermove = move;
-  el.onpointerleave = () => { tip.style.display = 'none'; cur.setAttribute('opacity', 0); };
-  document.getElementById('legend').innerHTML = REGIONS.map(r => `<span><i style="background:${RCOL[r]}"></i>${r[0].toUpperCase()+r.slice(1)}</span>`).join('');
-  document.getElementById('bandkey').innerHTML = [['Good',0,'≤12'],['Moderate',1,'13–55'],['Unhealthy',2,'56–150'],['Very unhealthy',3,'151–250'],['Hazardous',4,'251+']]
-    .map(([n,i,r]) => `<span><i style="background:${BANDS[i].color}"></i>${n} (${r})</span>`).join('');
+  svg.onpointerleave = () => { tip.style.display = 'none'; cur.setAttribute('opacity', 0); };
+  $('regKey').innerHTML = REGIONS.map(r => `<span><i class="sw-line" style="background:${RCOL[r]}"></i>${r[0].toUpperCase()+r.slice(1)}</span>`).join('');
+  const rng = UNIT === 'psi' ? ['0–50','51–100','101–200','201–300','301+'] : ['0–12','13–55','56–150','151–250','251+'];
+  $('bandKey').innerHTML = ['Good','Moderate','Unhealthy','Very unhealthy','Hazardous']
+    .map((n,i) => `<span><i class="sw-box" style="background:${bandColor(i)}"></i>${n} (${rng[i]})</span>`).join('');
 }
-document.querySelectorAll('.seg button').forEach(b => b.addEventListener('click', () => {
-  METRIC = +b.dataset.m;
-  document.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-pressed', x === b));
-  drawChart();
-}));
 
-async function load(){
-  try{
-    const res = await fetch('/api/air'); const d = await res.json();
-    if (d.error) throw new Error(d.error);
-    // hourly -> per-region arrays (oldest -> newest)
-    HOURLY = d.hourly; drawChart();
-    const hist = {}; REGIONS.forEach(r => hist[r] = d.hourly.map(x => x.v[r]).filter(v => v != null));
-    const now = {}, p3 = {}, psi3 = {};
-    REGIONS.forEach(r => { const a = hist[r]; now[r] = a[a.length-1]; p3[r] = mean(a.slice(-3)); psi3[r] = psiFromPm(p3[r]); });
+function bindSeg(id, attr, cb){
+  document.querySelectorAll(`#${id} button`).forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll(`#${id} button`).forEach(x => x.setAttribute('aria-pressed', x === b));
+    cb(b.dataset[attr]);
+  }));
+}
+bindSeg('heroSeg','h', v => { HERO = +v; if (R) renderHero(); });
+bindSeg('unitSeg','u', v => { UNIT = v; drawChart(); });
+bindSeg('avgSeg','m', v => { METRIC = +v; drawChart(); });
 
-    const worst = Math.max(...REGIONS.map(r => psi3[r]));
-    const b = band(worst);
-    document.body.dataset.b = b.i;
-    document.getElementById('psi3').textContent = worst;
-    document.getElementById('band').textContent = b.name;
-    const natNow = mean(REGIONS.map(r => now[r]));
-    document.getElementById('pmNow').textContent = `Island-wide PM2.5 now: ${fmt(natNow)} µg/m³ (range ${Math.min(...Object.values(now))}–${Math.max(...Object.values(now))})`;
-    document.getElementById('upd').textContent = 'PM2.5 updated ' + new Date(d.hourly.at(-1).t).toLocaleTimeString('en-SG',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Singapore'});
+// ---------- loading / caching ----------
+const KEY = 'haze-sg:v2';
+const lsGet = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
+const lsSet = d => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
+const banner = t => { const b = $('banner'); b.style.display = t ? 'block' : 'none'; b.textContent = t || ''; };
+const clock = iso => new Date(iso).toLocaleTimeString('en-SG',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Singapore'});
 
-    document.getElementById('rows').innerHTML = REGIONS.map(r =>
-      `<tr><td style="text-transform:capitalize">${r}</td><td>${pmChip(now[r])}</td><td>${chip(psi3[r])}</td><td>${d.psi24[r] != null ? chip(d.psi24[r]) : '–'}</td></tr>`).join('');
-
-    // cigarettes (22 µg/m³ over 24h = 1 cigarette)
-    const pm24 = mean(REGIONS.map(r => d.pm25_24h[r]).filter(v => v != null));
-    document.getElementById('c24').textContent = fmt(pm24/22);
-    document.getElementById('cpace').textContent = fmt(natNow/22);
-    document.getElementById('c1h').textContent = fmt(natNow/22/24, 2);
-
-    const psi24max = Math.max(...REGIONS.map(r => d.psi24[r] ?? 0));
-    const rec = recommendations(psi24max, Math.max(...Object.values(now)));
-    document.getElementById('recIntro').textContent =
-      `Based on 24-hour PSI of ${psi24max} (${band(psi24max).name}) and the highest 1-hour PM2.5 of ${Math.max(...Object.values(now))} µg/m³, following NEA's health advisory bands.`;
-    const list = a => '<ul>' + a.map(x => `<li>${x}</li>`).join('') + '</ul>';
-    document.getElementById('recs').innerHTML =
-      `<div><h3>Everyone</h3>${list(rec.general)}</div>
-       <div><h3>Sensitive groups</h3>${list(rec.sensitive)}</div>
-       <div><h3>Practical tips</h3>${list(rec.tips)}</div>`;
-  }catch(e){
-    const el = document.getElementById('err'); el.style.display = 'block';
-    el.textContent = 'Could not load air quality data (' + e.message + '). Check haze.gov.sg, then reload this page.';
-    document.getElementById('band').textContent = 'No data';
+function render(d, note=''){
+  DATA = d; R = compute(d);
+  $('upd').textContent = `Latest PM2.5 reading ${clock(d.hourly.at(-1).t)} (SGT)${note}`;
+  renderHero(); renderTable(); renderCigs(); renderRecs(); drawChart();
+}
+async function fetchAir(){
+  const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
+  try {
+    const r = await fetch('/api/air', {signal: c.signal});
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.status);
+    return d;
+  } finally { clearTimeout(t); }
+}
+async function refresh(attempt = 0){
+  try {
+    const d = await fetchAir();
+    banner(''); render(d); lsSet(d);
+  } catch (e) {
+    if (!DATA) {
+      if (attempt < 5) { banner("Still waiting on NEA's data servers, this can take a few seconds…"); setTimeout(() => refresh(attempt + 1), 4000); }
+      else banner("Couldn't reach the data right now. Try again in a minute, or check haze.gov.sg.");
+    } else banner(`Couldn't refresh just now, so this is saved data from ${clock(DATA.hourly.at(-1).t)}. Will retry shortly.`);
   }
 }
-load(); setInterval(load, 10*60*1000);
+// skeleton rows, then show cached data instantly while fetching fresh data
+$('rows').innerHTML = REGIONS.map(() => `<tr><td colspan="5"><div class="sk" style="height:22px"></div></td></tr>`).join('');
+const cached = lsGet();
+if (cached && cached.hourly?.length) render(cached, ' · refreshing…');
+refresh();
+setInterval(() => refresh(), 5 * 60 * 1000);
 </script>
 </body>
 </html>
