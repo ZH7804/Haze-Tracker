@@ -1,15 +1,18 @@
 <!doctype html>
 <html lang="en">
 <head>
-<link rel="icon" type="image/png" href="https://cloudflare.com" data-search="smoking" default-href="https://cloudflare.com">
 <meta charset="utf-8">
+<link rel="icon" type="image/png" sizes="512x512" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="description" content="Live Singapore haze tracker: current PM2.5 and PSI by region, a 24-hour cigarette equivalent, and an hourly forecast with an 80% range.">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
   "name": "How Much Haze Have You Smoked Today? - Haze Tracker SG",
-  "url": "https://pages.dev"
+  "url": "https://haze-tracker.pages.dev/",
+  "alternateName": "Haze Tracker SG"
 }
 </script>
 <title>How Much Haze Have You Smoked Today? - Haze Tracker SG</title>
@@ -64,6 +67,8 @@ th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);fon
 th:first-child,td:first-child{text-align:left}
 th{font-weight:600;font-size:.82rem;color:var(--mute)}
 tr:last-child td{border-bottom:0}
+.pmcol{border-right:3px solid #c3cad3;padding-right:16px}
+.pmcol+th,.pmcol+td{padding-left:16px}
 .chip{display:inline-block;min-width:3.2ch;padding:2px 10px;border-radius:99px;font-weight:700;text-align:center}
 .c0{background:var(--b0);color:var(--b0t)}.c1{background:var(--b1);color:var(--b1t)}.c2{background:var(--b2);color:var(--b2t)}
 .c3{background:var(--b3);color:var(--b3t)}.c4{background:var(--b4);color:var(--b4t)}.c5{background:var(--b5);color:var(--b5t)}
@@ -133,6 +138,26 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
   </div>
 
 
+
+  <section>
+    <h2>By region</h2>
+    <p class="note">PM2.5 (left of the divider) is the raw latest 1-hour reading in µg/m³, not a PSI, so it is uncoloured. The three PSI columns are coloured by PSI band. 1-hour and 3-hour PSI are calculated here from PM2.5; 24-hour PSI is NEA's official figure.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Region</th><th class="pmcol">PM2.5 now (µg/m³)</th><th>1h PSI</th><th>3h PSI</th><th>24h PSI</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Cigarette equivalent</h2>
+    <p class="note">Rule of thumb from Berkeley Earth: breathing 22 µg/m³ of PM2.5 over 24 hours is roughly one cigarette. An illustration of exposure, not a medical measurement, though it is funny imagining the entire nation all coming together for a smoke</p>
+    <div class="cig">
+      <div><b class="sk" id="c24">0.0</b><span>cigarettes over the past 24 hours (island-wide average)</span></div>
+      <div><b class="sk" id="c1h">0.00</b><span>cigarettes in the last hour</span></div>
+      <div><b class="sk" id="cpace">0.0</b><span>cigarettes per day if this hour's level continued</span></div>
+    </div>
+  </section>
+
   <section id="fcSec">
     <h2>Haze forecast</h2>
     <p class="note">Model forecast of the island-wide average 1-hour PSI (the mean PM2.5 of the five NEA regions, converted to PSI with NEA's breakpoints). The range is an 80% prediction interval: about 8 times in 10 the actual reading should land inside it. The model is refreshed with new satellite fire, weather and NEA data every hour. Not an official forecast.</p>
@@ -146,15 +171,6 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
     </div>
     <div class="fc-lg"><span><i class="sw-line" style="background:#16202a"></i>Island-wide 1h PSI (past 24 h)</span><span><i class="sw-line" style="background:#2f7fd6"></i>Forecast</span><span><i class="sw-box" style="background:#2f7fd6;opacity:.25"></i>80% range</span></div>
     <div class="fc-meta" id="fcMeta"></div>
-  </section>
-
-  <section>
-    <h2>By region</h2>
-    <p class="note">PM2.5 is the latest 1-hour reading (µg/m³). Colours show the PSI band each number falls in. 1-hour and 3-hour PSI are calculated here from PM2.5; 24-hour PSI is NEA's official figure.</p>
-    <div class="tw"><table>
-      <thead><tr><th>Region</th><th>PM2.5 now</th><th>1h PSI</th><th>3h PSI</th><th>24h PSI</th></tr></thead>
-      <tbody id="rows"></tbody>
-    </table></div>
   </section>
 
   <section>
@@ -182,15 +198,6 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
     </div>
   </section>
 
-  <section>
-    <h2>Cigarette equivalent</h2>
-    <p class="note">Rule of thumb from Berkeley Earth: breathing 22 µg/m³ of PM2.5 over 24 hours is roughly one cigarette. An illustration of exposure, not a medical measurement, though it is funny imagining the entire nation all coming together for a smoke</p>
-    <div class="cig">
-      <div><b class="sk" id="c24">0.0</b><span>cigarettes over the past 24 hours (island-wide average)</span></div>
-      <div><b class="sk" id="c1h">0.00</b><span>cigarettes in the last hour</span></div>
-      <div><b class="sk" id="cpace">0.0</b><span>cigarettes per day if this hour's level continued</span></div>
-    </div>
-  </section>
 
   <section>
     <h2>What to do</h2>
@@ -277,7 +284,7 @@ function renderHero(){
 function renderTable(){
   $('rows').innerHTML = REGIONS.map(r => {
     const x = R[r];
-    return `<tr><td style="text-transform:capitalize">${r}</td><td>${pmChip(x.now)}</td><td>${psiChip(x.psi1)}</td><td>${psiChip(x.psi3)}</td><td>${psiChip(x.psi24)}</td></tr>`;
+    return `<tr><td style="text-transform:capitalize">${r}</td><td class="pmcol">${x.now}</td><td>${psiChip(x.psi1)}</td><td>${psiChip(x.psi3)}</td><td>${psiChip(x.psi24)}</td></tr>`;
   }).join('');
 }
 
@@ -509,5 +516,4 @@ refreshFC(); setInterval(() => refreshFC(), 10 * 60 * 1000);
 </script>
 </body>
 </html>
-
 
