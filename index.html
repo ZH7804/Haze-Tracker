@@ -94,6 +94,14 @@ tr:last-child td{border-bottom:0}
 .tips{margin:14px 0 0;padding-left:1.1em}.tips li{margin:4px 0}
 footer{margin-top:24px;color:var(--mute);font-size:.82rem}
 
+
+/* forecast */
+.fc-meta{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--mute);font-size:.84rem;margin:10px 0 0}
+.fc-range{white-space:nowrap}
+.fc-note{display:none;margin:0 0 12px;padding:8px 12px;border-radius:8px;background:#fff6e0;border:1px solid #ecd9a6;color:#5a4a1a;font-size:.88rem}
+.fc-lg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:.84rem;color:var(--mute)}
+.fc-lg span{display:inline-flex;align-items:center;gap:6px}
+
 /* loading skeleton */
 @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .sk{color:transparent!important;border-radius:6px;background:linear-gradient(90deg,#e6eaee 25%,#f3f5f7 50%,#e6eaee 75%);background-size:200% 100%;animation:sh 1.4s linear infinite}
@@ -123,6 +131,22 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
     </div>
     <div class="avatar"><svg id="art" viewBox="0 0 200 140" aria-hidden="true"></svg><b class="sk" id="artCap">Loading</b><span id="artSub"></span></div>
   </div>
+
+
+  <section id="fcSec">
+    <h2>Haze forecast</h2>
+    <p class="note">Model forecast of the island-wide average 1-hour PM2.5 (mean of the five NEA regions). The range is an 80% prediction interval: about 8 times in 10 the actual reading should land inside it. The model is refreshed with new satellite fire, weather and NEA data every hour. Not an official forecast.</p>
+    <div class="fc-note" id="fcNote" role="status"></div>
+    <div class="tw"><table>
+      <thead><tr><th>Forecast for</th><th>PM2.5 (µg/m³)</th><th>80% range</th><th>PSI band</th></tr></thead>
+      <tbody id="fcRows"><tr><td colspan="4"><div class="sk" style="height:22px"></div></td></tr></tbody>
+    </table></div>
+    <div class="chartbox" style="margin-top:14px">
+      <div class="plot"><svg id="fcChart" role="img" aria-label="Past 24 hours of island-wide PM2.5 and the 80% forecast range for the next 24 hours"></svg></div>
+    </div>
+    <div class="fc-lg"><span><i class="sw-line" style="background:#16202a"></i>Island-wide PM2.5 (past 24 h)</span><span><i class="sw-line" style="background:#2f7fd6"></i>Forecast</span><span><i class="sw-box" style="background:#2f7fd6;opacity:.25"></i>80% range</span></div>
+    <div class="fc-meta" id="fcMeta"></div>
+  </section>
 
   <section>
     <h2>By region</h2>
@@ -176,7 +200,7 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
     <ul class="tips" id="tips"></ul>
   </section>
 
-  <footer>Data: NEA via data.gov.sg. Health advice follows NEA's 24-hour PSI advisory for planning ahead and the 1-hour PM2.5 for immediate activities; the 1-hour wording here is simplified, so check <a href="https://www.haze.gov.sg">haze.gov.sg</a> for official advisories. The 1-hour and 3-hour PSI figures are not official. Not medical advice; if you have a heart or lung condition, follow your doctor's guidance.</footer>
+  <footer>Data: NEA via data.gov.sg. Forecast inputs: weather and air-quality data by <a href="https://open-meteo.com">Open-Meteo</a> (CC BY 4.0) and active-fire detections from NASA FIRMS. Health advice follows NEA's 24-hour PSI advisory for planning ahead and the 1-hour PM2.5 for immediate activities; the 1-hour wording here is simplified, so check <a href="https://www.haze.gov.sg">haze.gov.sg</a> for official advisories. The 1-hour and 3-hour PSI figures are not official. Not medical advice; if you have a heart or lung condition, follow your doctor's guidance.</footer>
 </main>
 
 <script>
@@ -367,6 +391,78 @@ bindSeg('heroSeg','h', v => { HERO = +v; if (R) renderHero(); });
 bindSeg('unitSeg','u', v => { UNIT = v; drawChart(); });
 bindSeg('avgSeg','m', v => { METRIC = +v; drawChart(); });
 
+
+// ---------- forecast (model served by /api/forecast, refreshed hourly) ----------
+let FC = null;
+const FKEY = 'haze-sg:fc1';
+const fcLs = () => { try { return JSON.parse(localStorage.getItem(FKEY)); } catch { return null; } };
+const fcSet = d => { try { localStorage.setItem(FKEY, JSON.stringify(d)); } catch {} };
+const hrLabel = (t, withDay) => {
+  const d = new Date(t), tz = {timeZone:'Asia/Singapore'};
+  const h = d.toLocaleTimeString('en-SG', {hour:'numeric', hour12:true, ...tz}).replace(' ','').toLowerCase();
+  return withDay ? `${d.toLocaleDateString('en-SG', {weekday:'short', ...tz})} ${h}` : h;
+};
+const rnd = v => v < 10 ? v.toFixed(1) : Math.round(v);
+const bandName = pm => bandOf(psiFromPm(pm)).name;
+function fcNote(t){ const n = $('fcNote'); n.style.display = t ? 'block' : 'none'; n.textContent = t || ''; }
+
+function renderForecast(){
+  if (!FC) return;
+  const origin = new Date(FC.origin), isSame = (a,b) => new Date(a).toLocaleDateString('en-SG',{timeZone:'Asia/Singapore'}) === new Date(b).toLocaleDateString('en-SG',{timeZone:'Asia/Singapore'});
+  $('fcRows').innerHTML = FC.horizons.map(x => {
+    const lo = bandName(x.lo), hi = bandName(x.hi), mid = bandName(x.pm);
+    const bands = lo === hi ? mid : `${mid} <span style="color:var(--mute)">(${lo} to ${hi})</span>`;
+    return `<tr><td><b>+${x.h}h</b> <span style="color:var(--mute)">${hrLabel(x.time, !isSame(x.time, origin))}</span></td>` +
+      `<td>${pmChip(Math.round(x.pm))}</td><td class="fc-range">${rnd(x.lo)} – ${rnd(x.hi)}</td><td>${bands}</td></tr>`;
+  }).join('');
+  const ageH = (Date.now() - origin.getTime()) / 3600e3;
+  fcNote(ageH > 4 ? `Latest NEA reading used by the forecast is ${Math.round(ageH)} hours old, so treat these numbers with extra caution.` : '');
+  $('fcMeta').innerHTML = `<span>Based on data to ${hrLabel(FC.origin)} SGT</span><span>Mode: ${FC.regime === 'haze' ? 'haze model' : 'clean-air model'}</span><span>Model v${FC.modelVersion}</span>` +
+    (FC.missingFeatures?.length ? `<span>${FC.missingFeatures.length} inputs unavailable</span>` : '');
+  drawFcChart();
+}
+
+function drawFcChart(){
+  const svg = $('fcChart'); if (!FC || !DATA) return;
+  const W = 600, H = 260, M = {l:46, r:14, t:14, b:30};
+  const hist = DATA.hourly.map(x => ({t: new Date(x.t).getTime(), v: mean(REGIONS.map(r => x.v[r]).filter(v => v != null))})).filter(p => isFinite(p.v)).slice(-24);
+  const o = new Date(FC.origin).getTime();
+  const pts = [{t:o, pm:FC.nowPm, lo:FC.nowPm, hi:FC.nowPm}, ...FC.horizons.map(x => ({t:new Date(x.time).getTime(), pm:x.pm, lo:x.lo, hi:x.hi}))];
+  const t0 = Math.min(hist[0]?.t ?? o, o - 24*3600e3), t1 = pts.at(-1).t;
+  const yMax = Math.max(60, Math.ceil(Math.max(...hist.map(p => p.v), ...pts.map(p => p.hi)) * 1.15 / 10) * 10);
+  const X = t => M.l + (t - t0) * (W - M.l - M.r) / (t1 - t0), Y = v => H - M.b - v * (H - M.t - M.b) / yMax;
+  const th = [0,12,55,150,250,350,1e9]; let g = '';
+  for (let i = 0; i < 6; i++){ if (th[i] >= yMax) break; const top = Y(Math.min(th[i+1], yMax)), bot = Y(th[i]);
+    g += `<rect x="${M.l}" y="${top}" width="${W-M.l-M.r}" height="${bot-top}" fill="${bandColor(i)}" opacity=".2"/>`; }
+  const step = [5,10,20,25,50,100].find(s => yMax / s <= 6);
+  for (let v = 0; v <= yMax; v += step) g += `<line x1="${M.l}" x2="${W-M.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#16202a" opacity=".1"/><text x="${M.l-6}" y="${Y(v)+4}" text-anchor="end" font-size="11" fill="#5b6672">${v}</text>`;
+  g += `<text x="12" y="${M.t+4}" font-size="10" fill="#5b6672">µg/m³</text>`;
+  for (let t = Math.ceil(t0 / (6*3600e3)) * 6*3600e3; t <= t1; t += 6*3600e3)
+    g += `<text x="${X(t)}" y="${H-10}" text-anchor="middle" font-size="11" fill="#5b6672">${new Date(t).toLocaleTimeString('en-SG',{hour:'numeric',timeZone:'Asia/Singapore',hour12:true}).replace(' ','').toLowerCase()}</text>`;
+  g += `<line x1="${X(o)}" x2="${X(o)}" y1="${M.t}" y2="${H-M.b}" stroke="#16202a" opacity=".35" stroke-dasharray="3 3"/>`;
+  const band = [...pts.map(p => `${X(p.t).toFixed(1)},${Y(p.hi).toFixed(1)}`), ...pts.slice().reverse().map(p => `${X(p.t).toFixed(1)},${Y(p.lo).toFixed(1)}`)].join(' ');
+  g += `<polygon points="${band}" fill="#2f7fd6" opacity=".25"/>`;
+  g += `<polyline points="${hist.map(p => `${X(p.t).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ')}" fill="none" stroke="#16202a" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>`;
+  g += `<polyline points="${pts.map(p => `${X(p.t).toFixed(1)},${Y(p.pm).toFixed(1)}`).join(' ')}" fill="none" stroke="#2f7fd6" stroke-width="2.4" stroke-dasharray="6 4" stroke-linejoin="round"/>`;
+  FC.horizons.forEach(x => { g += `<circle cx="${X(new Date(x.time).getTime())}" cy="${Y(x.pm)}" r="3.5" fill="#2f7fd6" stroke="#fff" stroke-width="1.5"/>`; });
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.innerHTML = g;
+}
+
+async function refreshFC(attempt = 0){
+  try {
+    const c = new AbortController(), t = setTimeout(() => c.abort(), 45000);
+    const r = await fetch('/api/forecast', {signal: c.signal}); clearTimeout(t);
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || r.status);
+    FC = d; fcSet(d); renderForecast();
+  } catch (e) {
+    if (!FC) { if (attempt < 3) setTimeout(() => refreshFC(attempt + 1), 8000);
+      else { $('fcRows').innerHTML = `<tr><td colspan="4" style="text-align:left;color:var(--mute)">Forecast isn't available right now. The live readings below are unaffected.</td></tr>`; } }
+    else fcNote('Could not refresh the forecast just now; showing the last one received.');
+  }
+}
+const fcCached = fcLs(); if (fcCached?.horizons) { FC = fcCached; }
+
 // ---------- loading / caching ----------
 const KEY = 'haze-sg:v2';
 const lsGet = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
@@ -377,7 +473,7 @@ const clock = iso => new Date(iso).toLocaleTimeString('en-SG',{hour:'numeric',mi
 function render(d, note=''){
   DATA = d; R = compute(d);
   $('upd').textContent = `Latest PM2.5 reading ${clock(d.hourly.at(-1).t)} (SGT)${note}`;
-  renderHero(); renderTable(); renderCigs(); renderRecs(); drawChart();
+  renderHero(); renderTable(); renderCigs(); renderRecs(); drawChart(); renderForecast();
 }
 async function fetchAir(){
   const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
@@ -405,6 +501,8 @@ const cached = lsGet();
 if (cached && cached.hourly?.length) render(cached, ' · refreshing…');
 refresh();
 setInterval(() => refresh(), 5 * 60 * 1000);
+refreshFC(); setInterval(() => refreshFC(), 10 * 60 * 1000);
 </script>
 </body>
 </html>
+
