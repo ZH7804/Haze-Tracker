@@ -5,7 +5,7 @@ import { computeFeatures, HIST, FUT } from '../_lib/features.js';
 import { predictAll, CONFIG } from '../_lib/model.js';
 import { loadPm, loadWeather, loadUpstream, loadHotspots, sgtHourOf } from '../_lib/sources.js';
 
-const SCHEMA = 2;             // bump when the response format changes: older cached forecasts are rebuilt
+const SCHEMA = 3;             // bump when the response format changes: older cached forecasts are rebuilt
 const RETRY_S = 120;          // origin hour not published yet -> retry every 2 min
 const MAX_STALE_S = 6 * 3600; // serve the last good forecast for up to 6 h if sources are down
 
@@ -41,7 +41,7 @@ async function build(env) {
     run('open_meteo_aq', 'Open-Meteo air quality', ROLE.aq, false, () => loadUpstream(spec.upstream_stations, Hstart)),
     run('nasa_firms', 'NASA FIRMS fires', ROLE.fire, true, () => loadHotspots(env, spec, Hstart)),
   ]);
-  if (wx) S.open_meteo_wx.detail = `${Object.keys(spec.points).length} locations`;
+  if (wx) S.open_meteo_wx.detail = `${Object.keys(spec.points).length} locations, ${wx._era5 ? 'ERA5 history + forecast' : 'forecast data only (ERA5 archive unavailable)'}`;
   if (upPm) { const n = Object.values(upPm).filter(a => a[I] === a[I]).length; S.open_meteo_aq.detail = `${n} of ${Object.keys(upPm).length} stations reporting`; if (!n) S.open_meteo_aq.degraded = true; }
   else S.open_meteo_aq.degraded = true;
   if (hs) S.nasa_firms.detail = `${hs.dets.length} hotspots in last 5 days (${hs.source})`;
