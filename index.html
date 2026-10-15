@@ -87,6 +87,11 @@ tr:last-child td{border-bottom:0}
 .sw-box{width:13px;height:13px;border-radius:3px;display:inline-block}
 
 /* cigs + recs */
+.cig-ctl{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;margin:0 0 14px}
+.cig-ctl label{display:flex;flex-direction:column;gap:6px;font-size:.88rem;color:var(--mute)}
+.cig-ctl select{font:inherit;color:var(--ink,#16202a);padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;min-width:200px}
+.cig-ctl input[type=range]{width:min(320px,100%);accent-color:#2f7fd6}
+.cig-ctl b{color:var(--ink,#16202a)}
 .cig{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .cig div{border:1px solid var(--line);border-radius:10px;padding:14px 16px}
 .cig b{display:block;font-size:2.2rem;line-height:1.1;letter-spacing:-.02em}
@@ -151,8 +156,20 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
   <section>
     <h2>Cigarette equivalent</h2>
     <p class="note">Rule of thumb from Berkeley Earth: breathing 22 µg/m³ of PM2.5 over 24 hours is roughly one cigarette. An illustration of exposure, not a medical measurement, though it is funny imagining the entire nation all coming together for a smoke</p>
+    <div class="cig-ctl">
+      <label>Region
+        <select id="cigRegion">
+          <option value="avg">Island-wide average</option>
+          <option value="north">North</option><option value="west">West</option><option value="central">Central</option><option value="east">East</option><option value="south">South</option>
+        </select>
+      </label>
+      <label>Time spent outdoors: <b id="outVal">100%</b>
+        <input type="range" id="outSlider" min="0" max="100" step="5" value="100" aria-label="Share of time spent outdoors">
+      </label>
+    </div>
+    <p class="note" style="margin-top:0">Indoors is assumed to have about 40% of the outdoor PM2.5 (a typical figure for a home with windows mostly closed), so 0% outdoors lowers the count but does not reach zero. Air-purified rooms may be lower; open windows higher.</p>
     <div class="cig">
-      <div><b class="sk" id="c24">0.0</b><span>cigarettes over the past 24 hours (island-wide average)</span></div>
+      <div><b class="sk" id="c24">0.0</b><span id="s24">cigarettes over the past 24 hours</span></div>
       <div><b class="sk" id="c1h">0.00</b><span>cigarettes in the last hour</span></div>
       <div><b class="sk" id="cpace">0.0</b><span>cigarettes per day if this hour's level continued</span></div>
     </div>
@@ -288,11 +305,29 @@ function renderTable(){
   }).join('');
 }
 
+const INDOOR = 0.4;                                   // indoor PM2.5 as a share of outdoor
+const CIGLS = 'haze-sg:cig';
+const cigPref = (() => { try { return JSON.parse(localStorage.getItem(CIGLS)) || {}; } catch { return {}; } })();
+let CIG_REGION = REGIONS.includes(cigPref.region) ? cigPref.region : 'avg';
+let CIG_OUT = Number.isFinite(cigPref.out) ? Math.min(100, Math.max(0, cigPref.out)) : 100;
 function renderCigs(){
-  const natNow = mean(REGIONS.map(r => R[r].now));
-  const pm24 = mean(REGIONS.map(r => R[r].pm24).filter(v => v != null));
-  [['c24', fmt(pm24/22)],['cpace', fmt(natNow/22)],['c1h', fmt(natNow/22/24,2)]].forEach(([id,t]) => { $(id).textContent = t; $(id).classList.remove('sk'); });
+  if (!R) return;
+  const sel = CIG_REGION === 'avg' ? REGIONS : [CIG_REGION];
+  const now = mean(sel.map(r => R[r].now));
+  const p24 = sel.map(r => R[r].pm24).filter(v => v != null);
+  const o = CIG_OUT / 100, f = o + (1 - o) * INDOOR;
+  const label = CIG_REGION === 'avg' ? 'island-wide average' : CIG_REGION + ' region';
+  const set = (id, t) => { $(id).textContent = t; $(id).classList.remove('sk'); };
+  set('c24', p24.length ? fmt(mean(p24) * f / 22) : '–');
+  set('cpace', fmt(now * f / 22));
+  set('c1h', fmt(now * f / 22 / 24, 2));
+  $('s24').textContent = `cigarettes over the past 24 hours (${label}, ${CIG_OUT}% outdoors)`;
+  $('outVal').textContent = CIG_OUT + '%';
 }
+$('cigRegion').value = CIG_REGION; $('outSlider').value = CIG_OUT; $('outVal').textContent = CIG_OUT + '%';
+const saveCig = () => { try { localStorage.setItem(CIGLS, JSON.stringify({region: CIG_REGION, out: CIG_OUT})); } catch {} };
+$('cigRegion').addEventListener('change', e => { CIG_REGION = e.target.value; saveCig(); renderCigs(); });
+$('outSlider').addEventListener('input', e => { CIG_OUT = +e.target.value; saveCig(); renderCigs(); });
 
 // ---------- recommendations ----------
 const ADV = {
