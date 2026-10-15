@@ -41,21 +41,32 @@ export async function loadPm() {
 }
 
 // ---- Open-Meteo weather (7 points) ----
+// Training used the ERA5 archive for history. The archive lags ~5-7 days, so we take ERA5 where it exists and
+// the forecast API for the most recent days and the next 6 hours. If the archive is unavailable we fall back to
+// forecast-API history and say so in the source status.
 export async function loadWeather(points, Hstart) {
-  const names = Object.keys(points);
-  const q = `latitude=${names.map(n => points[n][0]).join(',')}&longitude=${names.map(n => points[n][1]).join(',')}` +
-    `&hourly=${Object.values(WX_VARS).join(',')}&wind_speed_unit=ms&timezone=Asia%2FSingapore&past_days=31&forecast_days=3`;
-  let j = await getJSON(`https://api.open-meteo.com/v1/forecast?${q}`);
-  if (!Array.isArray(j)) j = [j];
-  const L = HIST + FUT, wx = Object.fromEntries(Object.keys(WX_VARS).map(k => [k, {}]));
-  names.forEach((n, pi) => {
-    const h = j[pi].hourly, t0 = h.time.map(localStrToHour);
+  const names = Object.keys(points), L = HIST + FUT;
+  const coords = `latitude=${names.map(n => points[n][0]).join(',')}&longitude=${names.map(n => points[n][1]).join(',')}`;
+  const vars = `&hourly=${Object.values(WX_VARS).join(',')}&wind_speed_unit=ms&timezone=Asia%2FSingapore`;
+  const asArr = j => (Array.isArray(j) ? j : [j]);
+  const [fcR, arR] = await Promise.allSettled([
+    getJSON(`https://api.open-meteo.com/v1/forecast?${coords}${vars}&past_days=31&forecast_days=3`),
+    getJSON(`https://archive-api.open-meteo.com/v1/archive?${coords}${vars}&start_date=${new Date(Hstart * 3600e3).toISOString().slice(0, 10)}&end_date=${sgDate(-7)}`),
+  ]);
+  if (fcR.status !== 'fulfilled') throw fcR.reason;
+  const wx = Object.fromEntries(Object.keys(WX_VARS).map(k => [k, {}]));
+  const fill = (j, overwrite) => asArr(j).forEach((loc, pi) => {
+    const n = names[pi], h = loc.hourly, t0 = h.time.map(localStrToHour);
     for (const [k, api] of Object.entries(WX_VARS)) {
-      const arr = nanArr(L);
+      const arr = (overwrite ? wx[k][n] : null) || nanArr(L);
       h.time.forEach((_, i) => { const idx = t0[i] - Hstart; const v = h[api][i]; if (idx >= 0 && idx < L && v != null) arr[idx] = v; });
       wx[k][n] = arr;
     }
   });
+  fill(fcR.value, false);
+  const era5 = arR.status === 'fulfilled';
+  if (era5) fill(arR.value, true);                       // ERA5 overwrites forecast-API history where available
+  wx._era5 = era5;
   return wx;
 }
 
@@ -79,7 +90,7 @@ export async function loadUpstream(stations, Hstart) {
 export async function loadHotspots(env, spec, Hstart) {
   const key = env.FIRMS_MAP_KEY;
   if (!key) throw new Error('FIRMS_MAP_KEY is not set');
-  const src = env.FIRMS_SOURCE || 'VIIRS_SNPP_NRT';
+  const src = env.FIRMS_SOURCE || 'MODIS_NRT';
   const [w, s, e, n] = spec.hotspot_bbox_wsen;
   const url = `https://firms.modaps.eosdis.nasa.gov/api/area/csv/${key}/${src}/${w},${s},${e},${n}/5`;
   const r = await fetch(url);
@@ -93,7 +104,7 @@ export async function loadHotspots(env, spec, Hstart) {
   const dets = [];
   for (const ln of lines) {
     const c = ln.split(',');
-    const conf = Number(c[col.confidence]);                 // 'l'/'n'/'h' (VIIRS) -> NaN -> kept, same as training
+    const conf = Number(c[col.confidence]);                 // MODIS gives 0-100; anything non-numeric is kept, same as training
     if (c[col.confidence] !== '' && isFinite(conf) && conf < spec.hotspot_min_confidence) continue;
     const at = parseInt(c[col.acq_time], 10), lat = +c[col.latitude], lon = +c[col.longitude];
     const utc = Date.parse(c[col.acq_date] + 'T00:00:00Z') + (Math.floor(at / 100) * 60 + at % 100) * 60e3;
