@@ -21,7 +21,7 @@ const evalTree = (nodes, x) => {
   }
 };
 
-function runEntry(e, F) {
+export function runEntry(e, F) {
   const x = e.features.map(n => F[n]);
   if (e.kind === 'ridge') {
     let s = e.intercept;
@@ -34,6 +34,8 @@ function runEntry(e, F) {
   return CONFIG.XGB_BASE + e.trees.reduce((s, t) => s + evalTree(t, x), 0);
 }
 
+import { explain } from './explain.js';
+
 export function predictAll(model, F) {
   if (!(F.pm_now === F.pm_now)) throw new Error('no current PM2.5');
   const regime = Math.expm1(F.pm_3h) >= CONFIG.HAZE_GATE_PM3H ? 'haze' : 'clean';
@@ -43,7 +45,7 @@ export function predictAll(model, F) {
     const e = model.models[h][regime];
     const mid = base + runEntry(e, F);
     const g = z => Math.max(Math.expm1(z), 0);
-    out[h] = { pm: g(mid), lo: g(mid + e.q10), hi: g(mid + e.q90) };
+    out[h] = { pm: g(mid), lo: g(mid + e.q10), hi: g(mid + e.q90), drivers: explain(e, F, model.ref[regime], base) };
   }
   return { regime, horizons: out };
 }
