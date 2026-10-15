@@ -498,11 +498,18 @@ function renderDrivers(){
     box.innerHTML = `<b>Next hour:</b> no single factor stands out. The forecast mostly follows the current reading.<small>Estimated by switching each group of inputs (fires, wind, rain, mixing height and so on) to its typical value. Current air quality is not counted as a factor.</small>`;
     return;
   }
-  const say = d => `${d.psi > 0 ? 'raising' : 'lowering'} the forecast by about ${Math.abs(d.psi)} PSI`;
-  const rest = list.slice(1).map(d => `${d.label.toLowerCase()} (${d.psi > 0 ? '+' : '−'}${Math.abs(d.psi)})`).join('; ');
-  box.innerHTML = `<b>Biggest factor for the next hour</b> (besides the current PSI): <b>${list[0].label}</b>, ${say(list[0])} compared with a typical hour.` +
+  const PHR = {
+    wind_fires: ['winds are carrying more fire smoke toward Singapore than usual', 'winds are carrying less fire smoke toward Singapore than usual'],
+    arrival:    ['more smoke from fires is due to arrive soon than usual', 'less smoke from fires is due to arrive soon than usual'],
+    upstream:   ['air upstream is dirtier than usual', "air upstream is cleaner than usual or than Singapore's (no extra smoke on the way)"],
+  };
+  const say = d => { const up = d.psi > 0, n = Math.abs(d.psi);
+    return PHR[d.key] ? `${PHR[d.key][up ? 0 : 1]}, so it is ${up ? 'raising' : 'lowering'} the forecast by about ${n} PSI`
+                      : `${up ? 'raising' : 'lowering'} the forecast by about ${n} PSI`; };
+  const rest = list.slice(1).map(d => `${d.label} (${d.psi > 0 ? '+' : '−'}${Math.abs(d.psi)})`).join('; ');
+  box.innerHTML = `<b>Biggest factor for the next hour</b> (besides the current PSI): <b>${list[0].label}</b>: ${say(list[0])}, compared with a typical hour in similar conditions.` +
     (rest ? `<small>Also: ${rest}.</small>` : '') +
-    `<small>Estimated by switching each group of inputs to its typical value. Factors interact, so treat this as a guide rather than an exact cause.</small>`;
+    `<small>Estimated by switching each group of inputs to its typical value. A minus sign means the group is below its typical level and pulls the forecast down; it does not mean that more smoke lowers PSI. Factors interact, so treat this as a guide rather than an exact cause.</small>`;
 }
 
 function renderStatus(){
