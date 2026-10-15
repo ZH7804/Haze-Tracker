@@ -112,6 +112,15 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
 .fc-lg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:.84rem;color:var(--mute)}
 .fc-lg span{display:inline-flex;align-items:center;gap:6px}
 
+/* sources + drivers */
+.src{list-style:none;padding:0;margin:0}
+.src li{display:grid;grid-template-columns:14px 1fr;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
+.src li:first-child{border-top:0}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:6px;background:#aab3bd}
+.dot.ok{background:#2e9e5b}.dot.warn{background:#e0a31a}.dot.bad{background:#d2453b}
+.src small{display:block;color:var(--mute);font-size:.84rem}
+.fc-drv{margin:12px 0 0;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:.95rem}
+.fc-drv small{display:block;color:var(--mute);font-size:.82rem;margin-top:6px}
 /* loading skeleton */
 @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .sk{color:transparent!important;border-radius:6px;background:linear-gradient(90deg,#e6eaee 25%,#f3f5f7 50%,#e6eaee 75%);background-size:200% 100%;animation:sh 1.4s linear infinite}
@@ -183,6 +192,7 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
       <thead><tr><th>Forecast for</th><th>1h PSI</th><th>80% range</th><th>PSI band</th></tr></thead>
       <tbody id="fcRows"><tr><td colspan="4"><div class="sk" style="height:22px"></div></td></tr></tbody>
     </table></div>
+    <div class="fc-drv" id="fcDrv" style="display:none"></div>
     <div class="chartbox" style="margin-top:14px">
       <div class="plot"><svg id="fcChart" role="img" aria-label="Past 24 hours of island-wide 1-hour PSI and the 80% forecast range for the next 24 hours"></svg></div>
     </div>
@@ -222,6 +232,12 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
     <div id="nowBox"></div>
     <div class="recs" id="recs"></div>
     <ul class="tips" id="tips"></ul>
+  </section>
+
+  <section id="statusSec">
+    <h2>Data sources</h2>
+    <p class="note">Which feeds are working right now, and what each one contributes to the numbers on this page.</p>
+    <ul class="src" id="srcList"><li><span class="dot"></span><div>Checking…</div></li></ul>
   </section>
 
   <footer>Data: NEA via data.gov.sg. Forecast inputs: weather and air-quality data by <a href="https://open-meteo.com">Open-Meteo</a> (CC BY 4.0) and active-fire detections from NASA FIRMS. Health advice follows NEA's 24-hour PSI advisory for planning ahead and the 1-hour PM2.5 for immediate activities; the 1-hour wording here is simplified, so check <a href="https://www.haze.gov.sg">haze.gov.sg</a> for official advisories. The 1-hour and 3-hour PSI figures are not official. Not medical advice; if you have a heart or lung condition, follow your doctor's guidance.</footer>
@@ -435,7 +451,7 @@ bindSeg('avgSeg','m', v => { METRIC = +v; drawChart(); });
 
 
 // ---------- forecast (model served by /api/forecast, refreshed hourly) ----------
-let FC = null;
+let FC = null, FC_CATCH = 0, FC_TIMER = 0, FC_SRC = null, FC_NET = false, AIR = {ok: null};
 const FKEY = 'haze-sg:fc1';
 const fcLs = () => { try { return JSON.parse(localStorage.getItem(FKEY)); } catch { return null; } };
 const fcSet = d => { try { localStorage.setItem(FKEY, JSON.stringify(d)); } catch {} };
@@ -464,7 +480,60 @@ function renderForecast(){
   fcNote(ageH > 4 ? `Latest NEA reading used by the forecast is ${Math.round(ageH)} hours old, so treat these numbers with extra caution.` : '');
   $('fcMeta').innerHTML = `<span>Based on data to ${hrLabel(FC.origin)} SGT</span><span>Mode: ${FC.regime === 'haze' ? 'haze model' : 'clean-air model'}</span><span>Model v${FC.modelVersion}</span>` +
     (FC.missingFeatures?.length ? `<span>${FC.missingFeatures.length} inputs unavailable</span>` : '');
-  drawFcChart();
+  drawFcChart(); renderDrivers(); renderStatus();
+  // If live data already has a newer hour than the forecast, check again every minute (up to 8 times).
+  const lastT = DATA?.hourly?.length ? new Date(DATA.hourly[DATA.hourly.length - 1].t).getTime() : 0;
+  if (lastT > origin.getTime()) { if (FC_CATCH < 8 && !FC_TIMER) { FC_CATCH++; FC_TIMER = setTimeout(() => { FC_TIMER = 0; refreshFC(); }, 60000); } }
+  else FC_CATCH = 0;
+}
+
+
+function renderDrivers(){
+  const box = $('fcDrv'), h1 = FC.horizons.find(x => x.h === 1);
+  if (!h1?.drivers?.length) { box.style.display = 'none'; return; }
+  const lo = Math.max(h1.pm - 10, 0), slope = (psiFromPm(h1.pm + 10) - psiFromPm(lo)) / (h1.pm + 10 - lo);   // PSI per ug/m3 near the forecast
+  const list = h1.drivers.map(d => ({...d, raw: d.effectPm * slope, psi: Math.round(d.effectPm * slope)})).filter(d => Math.abs(d.raw) >= 1);
+  box.style.display = 'block';
+  if (!list.length) {
+    box.innerHTML = `<b>Next hour:</b> no single factor stands out. The forecast mostly follows the current reading.<small>Estimated by switching each group of inputs (fires, wind, rain, mixing height and so on) to its typical value. Current air quality is not counted as a factor.</small>`;
+    return;
+  }
+  const say = d => `${d.psi > 0 ? 'raising' : 'lowering'} the forecast by about ${Math.abs(d.psi)} PSI`;
+  const rest = list.slice(1).map(d => `${d.label.toLowerCase()} (${d.psi > 0 ? '+' : '−'}${Math.abs(d.psi)})`).join('; ');
+  box.innerHTML = `<b>Biggest factor for the next hour</b> (besides the current PSI): <b>${list[0].label}</b>, ${say(list[0])} compared with a typical hour.` +
+    (rest ? `<small>Also: ${rest}.</small>` : '') +
+    `<small>Estimated by switching each group of inputs to its typical value. Factors interact, so treat this as a guide rather than an exact cause.</small>`;
+}
+
+function renderStatus(){
+  const ul = $('srcList'); if (!ul) return;
+  const when = t => t ? clock(new Date(t).toISOString()) : '';
+  const row = (cls, name, status, detail) => `<li><span class="dot ${cls}"></span><div><b>${name}</b> <span style="color:var(--mute)">${status}</span><small>${detail}</small></div></li>`;
+  const rows = [];
+  // live readings shown on the rest of the page (/api/air)
+  if (AIR.ok === true) rows.push(row('ok', 'NEA PM2.5 and PSI', 'Working', `Region readings, 24-hour PSI and everything above the forecast. Latest reading ${clock(DATA.hourly.at(-1).t)} SGT, checked ${when(AIR.at)}.`));
+  else if (AIR.ok === false && DATA) rows.push(row('warn', 'NEA PM2.5 and PSI', 'Last refresh failed', `Showing saved data from ${clock(DATA.hourly.at(-1).t)} SGT. Will retry shortly.`));
+  else if (AIR.ok === false) rows.push(row('bad', 'NEA PM2.5 and PSI', 'Not working', 'The page could not reach the live readings.'));
+  else rows.push(row('na', 'NEA PM2.5 and PSI', 'Checking…', 'Region readings, 24-hour PSI and everything above the forecast.'));
+  // forecast inputs (/api/forecast)
+  const ORDER = ['nea_pm', 'open_meteo_wx', 'open_meteo_aq', 'nasa_firms'];
+  if (FC_NET && !FC_SRC) rows.push(row('bad', 'Forecast service', 'Unreachable', 'The page could not reach /api/forecast, so the forecast inputs cannot be checked.'));
+  else if (!FC_SRC) rows.push(row('na', 'Forecast inputs', 'Checking…', 'NEA readings, weather, upstream air quality and fire detections.'));
+  else for (const k of ORDER) {
+    const x = FC_SRC[k]; if (!x) continue;
+    const detail = [x.role, x.detail].filter(Boolean).join(' · ');
+    if (x.ok && !x.degraded) rows.push(row('ok', x.label, 'Working', detail));
+    else if (x.ok || (!x.required && !x.skipped)) rows.push(row('warn', x.label, x.ok ? 'Partly working' : 'Not working', `${detail ? detail + ' · ' : ''}${x.error || ''} Optional: the forecast still runs without it, with less information.`.trim()));
+    else if (x.skipped) rows.push(row('na', x.label, 'Not checked', `${x.role}. Skipped because an earlier source failed.`));
+    else rows.push(row('bad', x.label, 'Not working', `${x.role}. ${x.error || ''} The forecast cannot update without it.`));
+  }
+  // the model itself
+  if (FC) {
+    const stale = (FC.stale || (FC_SRC && Object.values(FC_SRC).some(x => !x.ok && x.required)));
+    rows.push(row(stale ? 'warn' : 'ok', `Forecast model v${FC.modelVersion}`, stale ? 'Showing the last good forecast' : 'Working',
+      `Built ${when(FC.generatedAt)} from data up to ${hrLabel(FC.origin)} SGT${FC.missingFeatures?.length ? `. ${FC.missingFeatures.length} inputs were unavailable` : ''}.`));
+  } else rows.push(row('na', 'Forecast model', 'Waiting for data', 'No forecast has been built yet.'));
+  ul.innerHTML = rows.join('');
 }
 
 function drawFcChart(){
@@ -495,19 +564,23 @@ function drawFcChart(){
 }
 
 async function refreshFC(attempt = 0){
+  let d = null;
   try {
     const c = new AbortController(), t = setTimeout(() => c.abort(), 45000);
     const r = await fetch('/api/forecast', {signal: c.signal}); clearTimeout(t);
-    const d = await r.json();
+    d = await r.json(); FC_NET = false;
+    FC_SRC = d.liveSources || d.sources || FC_SRC;
     if (!r.ok || d.error) throw new Error(d.error || r.status);
     FC = d; fcSet(d); renderForecast();
   } catch (e) {
+    if (!d) FC_NET = true;
     if (!FC) { if (attempt < 3) setTimeout(() => refreshFC(attempt + 1), 8000);
-      else { $('fcRows').innerHTML = `<tr><td colspan="4" style="text-align:left;color:var(--mute)">Forecast isn't available right now. The live readings below are unaffected.</td></tr>`; } }
+      else { $('fcRows').innerHTML = `<tr><td colspan="4" style="text-align:left;color:var(--mute)">Forecast isn't available right now. The live readings above are unaffected. See Data sources at the bottom of the page.</td></tr>`; } }
     else fcNote('Could not refresh the forecast just now; showing the last one received.');
+    renderStatus();
   }
 }
-const fcCached = fcLs(); if (fcCached?.horizons) { FC = fcCached; }
+const fcCached = fcLs(); if (fcCached?.horizons) { FC = fcCached; FC_SRC = fcCached.sources || null; }
 
 // ---------- loading / caching ----------
 const KEY = 'haze-sg:v2';
@@ -519,7 +592,7 @@ const clock = iso => new Date(iso).toLocaleTimeString('en-SG',{hour:'numeric',mi
 function render(d, note=''){
   DATA = d; R = compute(d);
   $('upd').textContent = `Latest PM2.5 reading ${clock(d.hourly.at(-1).t)} (SGT)${note}`;
-  renderHero(); renderTable(); renderCigs(); renderRecs(); drawChart(); renderForecast();
+  renderHero(); renderTable(); renderCigs(); renderRecs(); drawChart(); renderForecast(); renderStatus();
 }
 async function fetchAir(){
   const c = new AbortController(), t = setTimeout(() => c.abort(), 30000);
@@ -533,8 +606,10 @@ async function fetchAir(){
 async function refresh(attempt = 0){
   try {
     const d = await fetchAir();
+    AIR = {ok: true, at: Date.now()};
     banner(''); render(d); lsSet(d);
   } catch (e) {
+    AIR = {ok: false, at: Date.now(), err: String(e.message || e)}; renderStatus();
     if (!DATA) {
       if (attempt < 5) { banner("Still waiting on NEA's data servers, this can take a few seconds…"); setTimeout(() => refresh(attempt + 1), 4000); }
       else banner("Couldn't reach the data right now. Try again in a minute, or check haze.gov.sg.");
