@@ -5,6 +5,7 @@ import { computeFeatures, HIST, FUT } from '../_lib/features.js';
 import { predictAll, CONFIG } from '../_lib/model.js';
 import { loadPm, loadWeather, loadUpstream, loadHotspots, sgtHourOf } from '../_lib/sources.js';
 
+const SCHEMA = 2;             // bump when the response format changes: older cached forecasts are rebuilt
 const RETRY_S = 120;          // origin hour not published yet -> retry every 2 min
 const MAX_STALE_S = 6 * 3600; // serve the last good forecast for up to 6 h if sources are down
 
@@ -50,7 +51,7 @@ async function build(env) {
   const missing = MODEL.features.filter(f => !(F[f] === F[f]));
   const { regime, horizons } = predictAll(MODEL, F);
   return {
-    modelVersion: MODEL.version, trainedAt: MODEL.trained_at, interval: 0.8, regime,
+    schema: SCHEMA, modelVersion: MODEL.version, trainedAt: MODEL.trained_at, interval: 0.8, regime,
     origin: iso(originH), generatedAt: new Date(Date.now()).toISOString(), generatedHour: sgtHourOf(Date.now()),
     originHour: originH, nowPm: Math.expm1(F.pm_now), hotspotSource: hs.source,
     missingFeatures: missing, sources: S,
@@ -73,8 +74,9 @@ export async function onRequestGet({ request, env, waitUntil }) {
   };
 
   const hit = await cache.match(key);
-  if (hit) {
-    const d = await hit.json();
+  const old = hit ? await hit.json() : null;
+  if (old && old.schema === SCHEMA) {
+    const d = old;
     const nowH = sgtHourOf(Date.now()), age = (Date.now() - Date.parse(d.generatedAt)) / 1000;
     if (d.originHour >= nowH) return json(strip(d));            // already has this hour's NEA reading
     if (age < RETRY_S) return json(strip(d));                   // just tried; NEA may not have published yet
@@ -84,3 +86,4 @@ export async function onRequestGet({ request, env, waitUntil }) {
   try { return json(strip(await refresh())); }
   catch (e) { return json({ error: String(e.message || e), sources: e.sources }, 502); }
 }
+
