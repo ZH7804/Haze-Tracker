@@ -1,5 +1,5 @@
 // GET /api/forecast  ->  1/2/3/6/24-hour island-wide PM2.5 forecast with an 80% interval.
-// Recomputed at most once per clock hour (cached at the edge); the page just polls this endpoint.
+// Recomputed at most once per clock hour (cached at the edge); the page just polls this endpoint
 import MODEL from '../_lib/model.json';
 import { computeFeatures, HIST, FUT } from '../_lib/features.js';
 import { predictAll, CONFIG } from '../_lib/model.js';
