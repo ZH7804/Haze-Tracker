@@ -571,7 +571,7 @@ bindSeg('avgSeg','m', v => { METRIC = +v; drawChart(); });
 
 
 // ---------- forecast (model served by /api/forecast, refreshed hourly) ----------
-let FC = null, FC_CATCH = 0, FC_TIMER = 0, FC_SRC = null, FC_NET = false, AIR = {ok: null};
+let FC = null, FC_SRC = null, FC_NET = false, AIR = {ok: null};
 const FKEY = 'haze-sg:fc1';
 const fcLs = () => { try { return JSON.parse(localStorage.getItem(FKEY)); } catch { return null; } };
 const fcSet = d => { try { localStorage.setItem(FKEY, JSON.stringify(d)); } catch {} };
@@ -601,12 +601,7 @@ function renderForecast(){
   $('fcMeta').innerHTML = `<span>Based on data to ${hrLabel(FC.origin)} SGT</span><span>Mode: ${FC.regime === 'haze' ? 'haze model' : 'clean-air model'}</span><span>Model v${FC.modelVersion}</span>` +
     (LOC ? `<span>Forecast is island-wide, not specific to ${cap(LOC)}</span>` : '') + (FC.missingFeatures?.length ? `<span>${FC.missingFeatures.length} inputs unavailable</span>` : '');
   drawFcChart(); renderDrivers(); renderStatus();
-  // If live data already has a newer hour than the forecast, check again every minute (up to 8 times).
-  const lastT = DATA?.hourly?.length ? new Date(DATA.hourly[DATA.hourly.length - 1].t).getTime() : 0;
-  if (lastT > origin.getTime()) { if (FC_CATCH < 8 && !FC_TIMER) { FC_CATCH++; FC_TIMER = setTimeout(() => { FC_TIMER = 0; refreshFC(); }, 60000); } }
-  else FC_CATCH = 0;
 }
-
 
 function renderDrivers(){
   const box = $('fcDrv'), h1 = FC.horizons.find(x => x.h === 1);
@@ -714,6 +709,7 @@ const KEY = 'haze-sg:v2';
 const lsGet = () => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } };
 const lsSet = d => { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch {} };
 const banner = t => { const b = $('banner'); b.style.display = t ? 'block' : 'none'; b.textContent = t || ''; };
+const HR = 3600e3, sgHr = ms => Math.floor(ms / HR + 8);          // SGT hour number
 const clock = iso => new Date(iso).toLocaleTimeString('en-SG',{hour:'numeric',minute:'2-digit',timeZone:'Asia/Singapore'});
 
 function render(d, note=''){
@@ -746,10 +742,33 @@ async function refresh(attempt = 0){
 // skeleton rows, then show cached data instantly while fetching fresh data
 $('rows').innerHTML = REGIONS.map(() => `<tr><td colspan="5"><div class="sk" style="height:22px"></div></td></tr>`).join('');
 const cached = lsGet();
-if (cached && cached.hourly?.length) render(cached, ' · refreshing…');
-refresh();
-setInterval(() => refresh(), 5 * 60 * 1000);
-refreshFC(); setInterval(() => refreshFC(), 10 * 60 * 1000);
+if (cached && cached.hourly?.length) {
+  const cur = sgHr(Date.parse(cached.hourly.at(-1).t)) >= sgHr(Date.now());
+  render(cached, cur ? '' : ' · refreshing…');
+  if (cur) { AIR = {ok: true, at: cached.fetchedAt || Date.now()}; renderStatus(); }
+}
+
+// ---------- refresh schedule ----------
+// Fetch only when this hour's data is missing. Once it is loaded, sleep until just after the hour turns over.
+// Hidden tabs do nothing; coming back to the tab re-checks.
+const airCurrent = () => !!DATA?.hourly?.length && sgHr(Date.parse(DATA.hourly.at(-1).t)) >= sgHr(Date.now());
+const fcCurrent = () => !!FC && Number.isFinite(FC.originHour) && FC.originHour >= sgHr(Date.now());
+const RETRY_S = [120, 180, 300, 600, 900];          // waits while the new hour's data isn't published yet
+let SCHED = 0, TRIES = 0;
+async function cycle(){
+  clearTimeout(SCHED);
+  if (document.hidden) return;
+  const jobs = [];
+  if (!airCurrent()) jobs.push(refresh());
+  if (!fcCurrent()) jobs.push(refreshFC());
+  await Promise.all(jobs);
+  let wait;
+  if (airCurrent() && fcCurrent()) { TRIES = 0; wait = HR - (Date.now() % HR) + 180e3; }   // next hour + 3 min for NEA to publish
+  else wait = RETRY_S[Math.min(TRIES++, RETRY_S.length - 1)] * 1000;
+  SCHED = setTimeout(cycle, wait);
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) cycle(); });
+cycle();
 </script>
 </body>
 </html>
