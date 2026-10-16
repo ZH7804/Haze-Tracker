@@ -1,6 +1,8 @@
 const BASE = 'https://api-open.data.gov.sg/v2/real-time/api';
-const FRESH_S = 300;        // treat as fresh for 5 min
-const MAX_STALE_S = 6 * 3600; // serve stale for up to 6 h while revalidating
+const RETRY_S = 120;        // while this hour's reading is still missing, re-check at most every 2 min
+const PSI_GRACE_S = 600;    // accept a cached hour even if the 24h PSI hasn't updated after 10 min
+const MAX_STALE_S = 6 * 3600; // serve stale for up to 6 h if NEA is unreachable
+const sgHourOf = ms => Math.floor(ms / 3600e3 + 8);
 
 const sgDate = (offsetDays = 0) =>
   new Date(Date.now() + 8 * 3600e3 + offsetDays * 86400e3).toISOString().slice(0, 10);
@@ -65,9 +67,14 @@ export async function onRequestGet({ request, waitUntil }) {
   const hit = await cache.match(key);
   if (hit) {
     const data = await hit.json();
-    const age = (Date.now() - data.fetchedAt) / 1000;
-    if (age >= FRESH_S) waitUntil(refresh().catch(() => {}));
-    return out(data);
+    const nowH = sgHourOf(Date.now()), age = (Date.now() - data.fetchedAt) / 1000;
+    const pmCurrent = !!data.hourly?.length && sgHourOf(Date.parse(data.hourly.at(-1).t)) >= nowH;
+    const psiCurrent = !data.psiUpdated || sgHourOf(Date.parse(data.psiUpdated)) >= nowH;
+    // This hour's reading is already loaded: no upstream calls until the hour turns over.
+    if (pmCurrent && (psiCurrent || age > PSI_GRACE_S)) return out(data);
+    if (age < RETRY_S) return out(data);                        // just checked; NEA may not have published yet
+    try { return out(await refresh()); }                        // new hour started: fetch now and wait for it
+    catch (e) { if (age < MAX_STALE_S) return out(data); return out({ error: String(e) }, 502); }
   }
   try { return out(await refresh()); }
   catch (e) { return out({ error: String(e) }, 502); }
