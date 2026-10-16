@@ -5,7 +5,7 @@ import { computeFeatures, HIST, FUT } from '../_lib/features.js';
 import { predictAll, CONFIG } from '../_lib/model.js';
 import { loadPm, loadWeather, loadUpstream, loadHotspots, sgtHourOf } from '../_lib/sources.js';
 
-const SCHEMA = 3;             // bump when the response format changes: older cached forecasts are rebuilt
+const SCHEMA = 4;             // bump when the response format changes: older cached forecasts are rebuilt
 const RETRY_S = 120;          // origin hour not published yet -> retry every 2 min
 const MAX_STALE_S = 6 * 3600; // serve the last good forecast for up to 6 h if sources are down
 
@@ -27,8 +27,8 @@ async function build(env) {
   const skip = (key, label, role, required) => { S[key] = { label, role, required, ok: false, skipped: true, error: 'not attempted' }; };
   const ROLE = { pm: 'Starting point and recent history', wx: 'Wind, rain, humidity and mixing height', aq: 'Smoke levels at upstream stations (Sumatra, Batam, Kalimantan)', fire: 'Satellite fire detections' };
 
-  const pmMap = await run('nea_pm', 'NEA PM2.5 readings', ROLE.pm, true, loadPm);
-  if (!pmMap) { skip('open_meteo_wx', 'Open-Meteo weather', ROLE.wx, true); skip('open_meteo_aq', 'Open-Meteo air quality', ROLE.aq, false); skip('nasa_firms', 'NASA FIRMS fires', ROLE.fire, true); fail(); }
+  const pmMap = await run('nea_pm', 'NEA PM2.5 Readings', ROLE.pm, true, loadPm);
+  if (!pmMap) { skip('open_meteo_wx', 'Open-Meteo Weather', ROLE.wx, true); skip('open_meteo_aq', 'Open-Meteo Air Quality', ROLE.aq, false); skip('nasa_firms', 'NASA FIRMS Fires', ROLE.fire, true); fail(); }
   const originH = Math.max(...pmMap.keys());
   S.nea_pm.detail = `${pmMap.size} hourly readings, latest ${new Date(originH * 3600e3 - 8 * 3600e3).toLocaleTimeString('en-SG', { hour: 'numeric', timeZone: 'Asia/Singapore' })}`;
   const Hstart = originH - (HIST - 1), I = HIST - 1, L = HIST + FUT;
@@ -37,9 +37,9 @@ async function build(env) {
   const pm = ffill(pmRaw.slice(0, I + 1), 2);                // bridge short NEA gaps (<=2 h)
 
   const [wx, upPm, hs] = await Promise.all([
-    run('open_meteo_wx', 'Open-Meteo weather', ROLE.wx, true, () => loadWeather(spec.points, Hstart)),
-    run('open_meteo_aq', 'Open-Meteo air quality', ROLE.aq, false, () => loadUpstream(spec.upstream_stations, Hstart)),
-    run('nasa_firms', 'NASA FIRMS fires', ROLE.fire, true, () => loadHotspots(env, spec, Hstart)),
+    run('open_meteo_wx', 'Open-Meteo Weather', ROLE.wx, true, () => loadWeather(spec.points, Hstart)),
+    run('open_meteo_aq', 'Open-Meteo Air Quality', ROLE.aq, false, () => loadUpstream(spec.upstream_stations, Hstart)),
+    run('nasa_firms', 'NASA FIRMS Fires', ROLE.fire, true, () => loadHotspots(env, spec, Hstart)),
   ]);
   if (wx) S.open_meteo_wx.detail = `${Object.keys(spec.points).length} locations, ${wx._era5 ? 'ERA5 history + forecast' : 'forecast data only (ERA5 archive unavailable)'}`;
   if (upPm) { const n = Object.values(upPm).filter(a => a[I] === a[I]).length; S.open_meteo_aq.detail = `${n} of ${Object.keys(upPm).length} stations reporting`; if (!n) S.open_meteo_aq.degraded = true; }
@@ -86,4 +86,3 @@ export async function onRequestGet({ request, env, waitUntil }) {
   try { return json(strip(await refresh())); }
   catch (e) { return json({ error: String(e.message || e), sources: e.sources }, 502); }
 }
-
