@@ -112,6 +112,15 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
 .fc-lg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:.84rem;color:var(--mute)}
 .fc-lg span{display:inline-flex;align-items:center;gap:6px}
 
+.loc{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:10px}
+.btn{font:inherit;font-weight:600;font-size:.9rem;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink,#16202a);cursor:pointer}
+.btn:hover{border-color:#9aa6b2}.btn:disabled{opacity:.6;cursor:wait}
+.btn:focus-visible{outline:3px solid var(--b1);outline-offset:2px}
+#locMsg{color:var(--mute);font-size:.86rem}
+tr.me td{background:#f1f7fe}
+.you{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;background:#2f7fd6;color:#fff;font-size:.72rem;font-weight:700;vertical-align:middle}
+#about{margin-top:14px;font-size:.9rem;color:var(--mute)}
+#about a{color:inherit;font-weight:600}
 /* sources + drivers */
 .src{list-style:none;padding:0;margin:0}
 .src li{display:grid;grid-template-columns:14px 1fr;gap:2px 10px;padding:10px 0;border-top:1px solid var(--line)}
@@ -132,13 +141,17 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
   <header>
     <h1>How Much Haze Have You Smoked Today? - Latest Haze Updates</h1>
     <p id="upd">Loading latest readings…</p>
+    <div class="loc" id="locBox" style="display:none">
+      <button type="button" class="btn" id="locBtn">Use My Location</button>
+      <span id="locMsg" role="status"></span>
+    </div>
   </header>
   <div id="banner" role="status"></div>
 
   <div class="card hero">
     <div>
       <div class="controls" style="margin-bottom:10px">
-        <div><span class="ctl-label">PSI based on</span>
+        <div><span class="ctl-label">PSI Based On</span>
         <div class="seg" id="heroSeg" role="group" aria-label="PSI type">
           <button data-h="1" aria-pressed="false">1-hour</button>
           <button data-h="3" aria-pressed="true">3-hour</button>
@@ -154,16 +167,16 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
 
 
   <section>
-    <h2>By region</h2>
+    <h2>By Region</h2>
     <p class="note">PM2.5 (left of the divider) is the raw latest 1-hour reading in µg/m³, not a PSI, so it is uncoloured. The three PSI columns are coloured by PSI band. 1-hour and 3-hour PSI are calculated here from PM2.5; 24-hour PSI is NEA's official figure.</p>
     <div class="tw"><table>
-      <thead><tr><th>Region</th><th class="pmcol">PM2.5 now (µg/m³)</th><th>1h PSI</th><th>3h PSI</th><th>24h PSI</th></tr></thead>
+      <thead><tr><th>Region</th><th class="pmcol">PM2.5 Now (µg/m³)</th><th>1h PSI</th><th>3h PSI</th><th>24h PSI</th></tr></thead>
       <tbody id="rows"></tbody>
     </table></div>
   </section>
 
   <section>
-    <h2>Cigarette equivalent</h2>
+    <h2>Cigarette Equivalent</h2>
     <p class="note">Rule of thumb from Berkeley Earth: breathing 22 µg/m³ of PM2.5 over 24 hours is roughly one cigarette. An illustration of exposure, not a medical measurement, though it is funny imagining the entire nation all coming together for a smoke</p>
     <div class="cig-ctl">
       <label>Region
@@ -172,7 +185,7 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
           <option value="north">North</option><option value="west">West</option><option value="central">Central</option><option value="east">East</option><option value="south">South</option>
         </select>
       </label>
-      <label>Time spent outdoors: <b id="outVal">100%</b>
+      <label>Time Spent Outdoors: <b id="outVal">100%</b>
         <input type="range" id="outSlider" min="0" max="100" step="5" value="100" aria-label="Share of time spent outdoors">
       </label>
     </div>
@@ -185,11 +198,11 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
   </section>
 
   <section id="fcSec">
-    <h2>Haze forecast</h2>
+    <h2>Haze Forecast</h2>
     <p class="note">Model forecast of the island-wide average 1-hour PSI (the mean PM2.5 of the five NEA regions, converted to PSI with NEA's breakpoints). The range is an 80% prediction interval: about 8 times in 10 the actual reading should land inside it. The model is refreshed with new satellite fire, weather and NEA data every hour. Not an official forecast.</p>
     <div class="fc-note" id="fcNote" role="status"></div>
     <div class="tw"><table>
-      <thead><tr><th>Forecast for</th><th>1h PSI</th><th>80% range</th><th>PSI band</th></tr></thead>
+      <thead><tr><th>Forecast For</th><th>1h PSI</th><th>80% Range</th><th>PSI Band</th></tr></thead>
       <tbody id="fcRows"><tr><td colspan="4"><div class="sk" style="height:22px"></div></td></tr></tbody>
     </table></div>
     <div class="fc-drv" id="fcDrv" style="display:none"></div>
@@ -201,7 +214,7 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
   </section>
 
   <section>
-    <h2>Past 24 hours</h2>
+    <h2>Past 24 Hours</h2>
     <p class="note">Rolling averages ending at each hour. The PSI view converts PM2.5 with NEA's breakpoints, so its 24-hour line can differ slightly from the official PSI (which also includes other pollutants).</p>
     <div class="controls">
       <div><span class="ctl-label">Scale</span>
@@ -227,7 +240,7 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
 
 
   <section>
-    <h2>What to do</h2>
+    <h2>What to Do</h2>
     <p class="note" id="recIntro">&nbsp;</p>
     <div id="nowBox"></div>
     <div class="recs" id="recs"></div>
@@ -235,10 +248,12 @@ footer{margin-top:24px;color:var(--mute);font-size:.82rem}
   </section>
 
   <section id="statusSec">
-    <h2>Data sources</h2>
+    <h2>Data Sources</h2>
     <p class="note">Which feeds are working right now, and what each one contributes to the numbers on this page.</p>
     <ul class="src" id="srcList"><li><span class="dot"></span><div>Checking…</div></li></ul>
   </section>
+
+  <div id="about" style="display:none"></div>
 
   <footer>Data: NEA via data.gov.sg. Forecast inputs: weather and air-quality data by <a href="https://open-meteo.com">Open-Meteo</a> (CC BY 4.0) and active-fire detections from NASA FIRMS. Health advice follows NEA's 24-hour PSI advisory for planning ahead and the 1-hour PM2.5 for immediate activities; the 1-hour wording here is simplified, so check <a href="https://www.haze.gov.sg">haze.gov.sg</a> for official advisories. The 1-hour and 3-hour PSI figures are not official. Not medical advice; if you have a heart or lung condition, follow your doctor's guidance.</footer>
 </main>
@@ -303,21 +318,23 @@ function compute(d){
 const worst = key => Math.max(...REGIONS.map(r => R[r][key] ?? 0));
 
 function renderHero(){
-  const v = worst({1:'psi1',3:'psi3',24:'psi24'}[HERO]);
+  const key = {1:'psi1',3:'psi3',24:'psi24'}[HERO];
+  const v = LOC ? (R[LOC][key] ?? 0) : worst(key);
+  const where = LOC ? `your region (${cap(LOC)})` : 'worst region';
   const b = bandOf(v);
   ['psiBig','psiPill','heroSub','artCap'].forEach(id => $(id).classList.remove('sk'));
   $('psiBig').textContent = v;
   $('psiPill').textContent = b.name; $('psiPill').className = `pill c${b.i}`;
-  $('heroSub').textContent = {1:'1-hour PSI, worst region (latest hourly PM2.5 converted)',
-    3:'Old-style 3-hour PSI, worst region (average of last 3 hourly PM2.5 readings)',
-    24:'Official 24-hour PSI, worst region'}[HERO];
+  $('heroSub').textContent = {1:`1-hour PSI, ${where} (latest hourly PM2.5 converted)`,
+    3:`Old-style 3-hour PSI, ${where} (average of last 3 hourly PM2.5 readings)`,
+    24:`Official 24-hour PSI, ${where}`}[HERO];
   setArt(b.i);
 }
 
 function renderTable(){
   $('rows').innerHTML = REGIONS.map(r => {
     const x = R[r];
-    return `<tr><td style="text-transform:capitalize">${r}</td><td class="pmcol">${x.now}</td><td>${psiChip(x.psi1)}</td><td>${psiChip(x.psi3)}</td><td>${psiChip(x.psi24)}</td></tr>`;
+    return `<tr class="${r === LOC ? 'me' : ''}"><td style="text-transform:capitalize">${r}${r === LOC ? '<span class="you">You</span>' : ''}</td><td class="pmcol">${x.now}</td><td>${psiChip(x.psi1)}</td><td>${psiChip(x.psi3)}</td><td>${psiChip(x.psi24)}</td></tr>`;
   }).join('');
 }
 
@@ -345,6 +362,109 @@ const saveCig = () => { try { localStorage.setItem(CIGLS, JSON.stringify({region
 $('cigRegion').addEventListener('change', e => { CIG_REGION = e.target.value; saveCig(); renderCigs(); });
 $('outSlider').addEventListener('input', e => { CIG_OUT = +e.target.value; saveCig(); renderCigs(); });
 
+// ---------- optional location (nearest NEA region; coordinates never leave the browser) ----------
+const ABOUT = { name: 'Ng Zi Heng', blurb: 'Y2 DSAI student at NTU-USP', linkedin: 'https://www.linkedin.com/in/zi-heng-ng-5768b83bb/', github: 'https://github.com/ZH7804' };
+// NEA air-quality regions: each town's region is from NEA's list; centre coordinates are approximate.
+const TOWNS = [
+  ['Admiralty','north',1.4406,103.801],
+  ['Kranji','north',1.4251,103.7619],
+  ['Woodlands','north',1.437,103.7865],
+  ['Sembawang','north',1.4491,103.82],
+  ['Yishun','north',1.4304,103.8354],
+  ['Yio Chu Kang','north',1.3817,103.8449],
+  ['Seletar','north',1.415,103.869],
+  ['Punggol','north',1.4043,103.9022],
+  ['Sengkang','north',1.3917,103.8953],
+  ['Holland','south',1.312,103.796],
+  ['Queenstown','south',1.2942,103.806],
+  ['Bukit Merah','south',1.2819,103.8239],
+  ['Telok Blangah','south',1.2706,103.8097],
+  ['Pasir Panjang','south',1.276,103.791],
+  ['Sentosa','south',1.2494,103.8303],
+  ['Bukit Timah','south',1.3294,103.8021],
+  ['Newton','south',1.3127,103.8381],
+  ['Orchard','south',1.304,103.8318],
+  ['City','south',1.29,103.852],
+  ['Marina South','south',1.271,103.863],
+  ['Serangoon','east',1.3499,103.8736],
+  ['Hougang','east',1.3712,103.892],
+  ['Tampines','east',1.354,103.944],
+  ['Pasir Ris','east',1.373,103.9493],
+  ['Loyang','east',1.3725,103.9745],
+  ['Simei','east',1.3434,103.9533],
+  ['Kallang','east',1.3114,103.8714],
+  ['Katong','east',1.305,103.905],
+  ['East Coast','east',1.301,103.925],
+  ['Macpherson','east',1.3267,103.89],
+  ['Bedok','east',1.324,103.93],
+  ['Pulau Ubin','east',1.4044,103.966],
+  ['Pulau Tekong','east',1.413,104.05],
+  ['Lim Chu Kang','west',1.438,103.717],
+  ['Choa Chu Kang','west',1.3854,103.7443],
+  ['Bukit Panjang','west',1.379,103.762],
+  ['Tuas','west',1.32,103.65],
+  ['Jurong East','west',1.333,103.742],
+  ['Jurong West','west',1.34,103.707],
+  ['Jurong Industrial Estate','west',1.315,103.69],
+  ['Jurong Island','west',1.266,103.699],
+  ['Bukit Batok','west',1.349,103.749],
+  ['Hillview','west',1.3626,103.7676],
+  ['West Coast','west',1.303,103.765],
+  ['Clementi','west',1.315,103.765],
+  ['Thomson','central',1.34,103.835],
+  ['Marymount','central',1.3492,103.8393],
+  ['Sin Ming','central',1.3601,103.834],
+  ['Ang Mo Kio','central',1.3691,103.8454],
+  ['Bishan','central',1.3508,103.8485],
+  ['Serangoon Gardens','central',1.3626,103.867],
+  ['MacRitchie','central',1.342,103.833],
+  ['Toa Payoh','central',1.3343,103.8563]
+];
+const LOCLS = 'haze-sg:loc', TOWNLS = 'haze-sg:town';
+const cap = t => t.charAt(0).toUpperCase() + t.slice(1);
+let LOC = (() => { try { const v = localStorage.getItem(LOCLS); return REGIONS.includes(v) ? v : null; } catch { return null; } })();
+let LOC_TOWN = (() => { try { return localStorage.getItem(TOWNLS) || ''; } catch { return ''; } })();
+if (LOC && !cigPref.region) { CIG_REGION = LOC; $('cigRegion').value = LOC; }
+const kmBetween = (a, b, c, d) => { const r = x => x * Math.PI / 180, h = Math.sin(r(c - a) / 2) ** 2 + Math.cos(r(a)) * Math.cos(r(c)) * Math.sin(r(d - b) / 2) ** 2; return 12742 * Math.asin(Math.sqrt(h)); };
+const inSingapore = (la, lo) => la > 1.16 && la < 1.48 && lo > 103.6 && lo < 104.05;
+const nearestTown = (la, lo) => { let best = null, bd = 1e9; for (const t of TOWNS) { const d = kmBetween(la, lo, t[2], t[3]); if (d < bd) { bd = d; best = t; } } return {town: best[0], region: best[1], km: bd}; };
+function locMsg(t){ $('locMsg').textContent = t || ''; }
+function renderLocUI(busy){
+  const b = $('locBtn'); b.disabled = !!busy;
+  b.textContent = busy ? 'Locating…' : LOC ? 'Clear My Location' : 'Use My Location';
+  if (!busy && LOC) locMsg(`Showing the ${cap(LOC)} region${LOC_TOWN ? ` (nearest area: ${LOC_TOWN})` : ''} as your area.`);
+  else if (!busy && !$('locMsg').dataset.err) locMsg('Optional. Shows the NEA region nearest you. Your location stays in your browser.');
+}
+function applyLoc(region, town){
+  LOC = region; LOC_TOWN = region ? (town || '') : '';
+  try { if (region) { localStorage.setItem(LOCLS, region); localStorage.setItem(TOWNLS, LOC_TOWN); } else { localStorage.removeItem(LOCLS); localStorage.removeItem(TOWNLS); } } catch {}
+  CIG_REGION = region || 'avg'; $('cigRegion').value = CIG_REGION; saveCig();
+  $('locMsg').dataset.err = ''; renderLocUI();
+  if (R) { renderHero(); renderTable(); renderCigs(); renderRecs(); }
+  renderForecast();
+}
+function locFail(t){ $('locMsg').dataset.err = '1'; locMsg(t); renderLocUI(false); }
+if ('geolocation' in navigator) {
+  $('locBox').style.display = 'flex'; renderLocUI();
+  $('locBtn').addEventListener('click', () => {
+    if (LOC) { applyLoc(null); return; }
+    $('locMsg').dataset.err = ''; locMsg(''); renderLocUI(true);
+    navigator.geolocation.getCurrentPosition(pos => {
+      const {latitude: la, longitude: lo} = pos.coords;
+      if (!inSingapore(la, lo)) return locFail("You don't seem to be in Singapore, so the page is staying island-wide.");
+      const n = nearestTown(la, lo);
+      if (n.km > 15) return locFail("You don't seem to be in Singapore, so the page is staying island-wide.");
+      applyLoc(n.region, n.town);
+    }, err => locFail(err.code === 1 ? 'Location permission was denied. You can allow it in your browser settings and try again.' : "Couldn't get your location. Please try again."),
+    {timeout: 10000, maximumAge: 600000});
+  });
+}
+(() => {
+  const a = $('about'), ok = u => /^https:\/\//.test(u || '');
+  const parts = [ABOUT.name && `Built by <b>${ABOUT.name.replace(/[<>&]/g, '')}</b>${ABOUT.blurb ? ', ' + ABOUT.blurb.replace(/[<>&]/g, '') : ''}`, ok(ABOUT.linkedin) && `<a href="${ABOUT.linkedin}" target="_blank" rel="noopener noreferrer">LinkedIn</a>`, ok(ABOUT.github) && `<a href="${ABOUT.github}" target="_blank" rel="noopener noreferrer">GitHub</a>`].filter(Boolean);
+  if (parts.length) { a.innerHTML = parts.join(' · '); a.style.display = 'block'; }
+})();
+
 // ---------- recommendations ----------
 const ADV = {
   healthy:   ['Normal activities.','Normal activities.','Reduce prolonged or strenuous outdoor physical exertion.','Avoid prolonged or strenuous outdoor physical exertion.','Minimise outdoor activity.'],
@@ -358,12 +478,12 @@ function pmBand(v){
   return {n:'Band IV (Very high)', c:4, t:'Stay indoors where you can.'};
 }
 function renderRecs(){
-  const psi24 = worst('psi24'), k = Math.min(bandOf(psi24).i, 4);
-  const pmMax = Math.max(...REGIONS.map(r => R[r].now));
+  const psi24 = LOC ? (R[LOC].psi24 ?? 0) : worst('psi24'), k = Math.min(bandOf(psi24).i, 4);
+  const pmMax = LOC ? R[LOC].now : Math.max(...REGIONS.map(r => R[r].now));
   const pb = pmBand(pmMax);
   $('recIntro').textContent = `Following NEA: use the 1-hour PM2.5 for what you do right now, and the 24-hour PSI (currently ${psi24}, ${bandOf(psi24).name}) to plan ahead.`;
-  $('nowBox').innerHTML = `<div class="now c${pb.c}">Right now: ${pb.n}, highest region ${pmMax} µg/m³. ${pb.t}</div>`;
-  $('recs').innerHTML = [['Healthy adults','healthy'],['Elderly, pregnant women, children','sensitive'],['Chronic lung or heart disease','chronic']]
+  $('nowBox').innerHTML = `<div class="now c${pb.c}">Right now: ${pb.n}, ${LOC ? cap(LOC) + ' region' : 'highest region'} ${pmMax} µg/m³. ${pb.t}</div>`;
+  $('recs').innerHTML = [['Healthy Adults','healthy'],['Elderly, Pregnant Women, Children','sensitive'],['Chronic Lung or Heart Disease','chronic']]
     .map(([t,key]) => `<div><h3>${t}</h3><p>${ADV[key][k]}</p></div>`).join('');
   const tips = ['Check haze.gov.sg or the myENV app before planning outdoor activity.'];
   if (k >= 2 || pmMax > 55) tips.unshift(
@@ -479,7 +599,7 @@ function renderForecast(){
   const ageH = (Date.now() - origin.getTime()) / 3600e3;
   fcNote(ageH > 4 ? `Latest NEA reading used by the forecast is ${Math.round(ageH)} hours old, so treat these numbers with extra caution.` : '');
   $('fcMeta').innerHTML = `<span>Based on data to ${hrLabel(FC.origin)} SGT</span><span>Mode: ${FC.regime === 'haze' ? 'haze model' : 'clean-air model'}</span><span>Model v${FC.modelVersion}</span>` +
-    (FC.missingFeatures?.length ? `<span>${FC.missingFeatures.length} inputs unavailable</span>` : '');
+    (LOC ? `<span>Forecast is island-wide, not specific to ${cap(LOC)}</span>` : '') + (FC.missingFeatures?.length ? `<span>${FC.missingFeatures.length} inputs unavailable</span>` : '');
   drawFcChart(); renderDrivers(); renderStatus();
   // If live data already has a newer hour than the forecast, check again every minute (up to 8 times).
   const lastT = DATA?.hourly?.length ? new Date(DATA.hourly[DATA.hourly.length - 1].t).getTime() : 0;
@@ -519,13 +639,13 @@ function renderStatus(){
   const rows = [];
   // live readings shown on the rest of the page (/api/air)
   if (AIR.ok === true) rows.push(row('ok', 'NEA PM2.5 and PSI', 'Working', `Region readings, 24-hour PSI and everything above the forecast. Latest reading ${clock(DATA.hourly.at(-1).t)} SGT, checked ${when(AIR.at)}.`));
-  else if (AIR.ok === false && DATA) rows.push(row('warn', 'NEA PM2.5 and PSI', 'Last refresh failed', `Showing saved data from ${clock(DATA.hourly.at(-1).t)} SGT. Will retry shortly.`));
+  else if (AIR.ok === false && DATA) rows.push(row('warn', 'NEA PM2.5 and PSI', 'Last Refresh Failed', `Showing saved data from ${clock(DATA.hourly.at(-1).t)} SGT. Will retry shortly.`));
   else if (AIR.ok === false) rows.push(row('bad', 'NEA PM2.5 and PSI', 'Not working', 'The page could not reach the live readings.'));
   else rows.push(row('na', 'NEA PM2.5 and PSI', 'Checking…', 'Region readings, 24-hour PSI and everything above the forecast.'));
   // forecast inputs (/api/forecast)
   const ORDER = ['nea_pm', 'open_meteo_wx', 'open_meteo_aq', 'nasa_firms'];
-  if (FC_NET && !FC_SRC) rows.push(row('bad', 'Forecast service', 'Unreachable', 'The page could not reach /api/forecast, so the forecast inputs cannot be checked.'));
-  else if (!FC_SRC) rows.push(row('na', 'Forecast inputs', 'Checking…', 'NEA readings, weather, upstream air quality and fire detections.'));
+  if (FC_NET && !FC_SRC) rows.push(row('bad', 'Forecast Service', 'Unreachable', 'The page could not reach /api/forecast, so the forecast inputs cannot be checked.'));
+  else if (!FC_SRC) rows.push(row('na', 'Forecast Inputs', 'Checking…', 'NEA readings, weather, upstream air quality and fire detections.'));
   else for (const k of ORDER) {
     const x = FC_SRC[k]; if (!x) continue;
     const detail = [x.role, x.detail].filter(Boolean).join(' · ');
@@ -537,9 +657,9 @@ function renderStatus(){
   // the model itself
   if (FC) {
     const stale = (FC.stale || (FC_SRC && Object.values(FC_SRC).some(x => !x.ok && x.required)));
-    rows.push(row(stale ? 'warn' : 'ok', `Forecast model v${FC.modelVersion}`, stale ? 'Showing the last good forecast' : 'Working',
+    rows.push(row(stale ? 'warn' : 'ok', `Forecast Model v${FC.modelVersion}`, stale ? 'Showing the last good forecast' : 'Working',
       `Built ${when(FC.generatedAt)} from data up to ${hrLabel(FC.origin)} SGT${FC.missingFeatures?.length ? `. ${FC.missingFeatures.length} inputs were unavailable` : ''}.`));
-  } else rows.push(row('na', 'Forecast model', 'Waiting for data', 'No forecast has been built yet.'));
+  } else rows.push(row('na', 'Forecast Model', 'Waiting for data', 'No forecast has been built yet.'));
   ul.innerHTML = rows.join('');
 }
 
@@ -633,5 +753,4 @@ refreshFC(); setInterval(() => refreshFC(), 10 * 60 * 1000);
 </script>
 </body>
 </html>
-
 
